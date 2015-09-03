@@ -1,5 +1,6 @@
 #ifndef MX_VISION_H
 #define	MX_VISION_H
+#define MX_DEV
 
 #include <stdbool.h>
 
@@ -9,7 +10,8 @@
 #define BUFFER_SIZE (WIDTH * HEIGHT * 2) // we are working on RGB_565
 #define PIXELS (WIDTH * HEIGHT) // pixels in camera
 #define RED_THRESHOLD 40 // used for binary filter
-#define GREEN_THRESHOLD 40 // used for binary filter
+#define GREEN_THRESHOLD 30 // used for binary filter
+#define BLUE_THRESHOLD
 #define MIN_WIDTH 5
 #define MIN_HEIGHT 5
 

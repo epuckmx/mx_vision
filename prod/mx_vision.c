@@ -225,6 +225,71 @@ void lookForRedEdges(char ix, char iy, char* hu, char* wr, char* hd, char* wl) {
     }
 }
 
+void lookForGreenEdges(char ix, char iy, char* hu, char* wr, char* hd, char* wl) {
+    *hu = iy;
+    *wr = ix;
+    *hd = iy;
+    *wl = ix;
+    char r, g;
+    getColors(ix, iy, &r, &g);
+    char rr = r, gr = g;
+    while (gr > 0) {
+        (*hu)--;
+        if (*hu > 0) {
+            getColors(ix, *hu, &rr, &gr);
+            if (gr == 0) {
+                (*hu)++;
+                break;
+            }
+        } else {
+            (*hu)++;
+            break;
+        }
+    }
+    gr = g;
+    while (gr > 0) {
+        (*wr)++;
+        if (*wr < WIDTH - 1) {
+            getColors(*wr, iy, &rr, &gr);
+            if (gr == 0) {
+                (*wr)--;
+                break;
+            }
+        } else {
+            (*wr)--;
+            break;
+        }
+    }
+    gr = g;
+    while (gr > 0) {
+        (*hd)++;
+        if (*hd < HEIGHT - 1) {
+            getColors(ix, *hd, &rr, &gr);
+            if (gr == 0) {
+                (*hd)--;
+                break;
+            }
+        } else {
+            (*hd)--;
+            break;
+        }
+    }
+    gr = g;
+    while (gr > 0) {
+        (*wl)--;
+        if (*wl > 0) {
+            getColors(*wl, iy, &rr, &gr);
+            if (gr == 0) {
+                (*wl)++;
+                break;
+            }
+        } else {
+            (*wl)++;
+            break;
+        }
+    }
+}
+
 void detectChannelRed(void) {
     bool objectDetected = false;
     int iteration = 0;
@@ -245,7 +310,6 @@ void detectChannelRed(void) {
                 rect = newRect;
                 char hu = iy, wr = ix, hd = iy, wl = ix;
                 lookForRedEdges(ix, iy, &hu, &wr, &hd, &wl);
-                printf("Rect %d %d %d %d\n", hu, wr, hd, wl);
                 newRect.x = wl;
                 newRect.y = hu;
                 newRect.w = wr - wl + 1;
@@ -258,7 +322,44 @@ void detectChannelRed(void) {
                 objectDetected = true;
                 redObject = rect;
                 redDetected = true;
-                printf("Red object\n");
+            }
+        }
+        iteration++;
+    }
+}
+
+void detectChannelGreen(void) {
+    bool objectDetected = false;
+    int iteration = 0;
+    while (!objectDetected && iteration < PIXELS / 2) {
+        int index = rand() % PIXELS;
+        char ix = (char)(index % WIDTH);
+        char iy = (char)(index / HEIGHT);
+        if (ix == 0 || ix == WIDTH - 1 || iy == 0 || iy == HEIGHT - 1) continue;
+        char r, g;
+        getColors(ix, iy, &r, &g);
+        if (g > 0) {
+            int area = 0;
+            int newArea = 1;
+            struct Object rect = (struct Object) {0, 0, 0, 0};
+            struct Object newRect = (struct Object) {0, 0, 1, 1};
+            while (newArea > area) {
+                area = newArea;
+                rect = newRect;
+                char hu = iy, wr = ix, hd = iy, wl = ix;
+                lookForGreenEdges(ix, iy, &hu, &wr, &hd, &wl);
+                newRect.x = wl;
+                newRect.y = hu;
+                newRect.w = wr - wl + 1;
+                newRect.h = hd - hu + 1;
+                newArea = newRect.w * newRect.h;
+                ix = newRect.x + newRect.w / 2;
+                iy = newRect.y + newRect.h / 2;
+            }
+            if (rect.w >= MIN_WIDTH && rect.h >= MIN_HEIGHT) {
+                objectDetected = true;
+                greenObject = rect;
+                greenDetected = true;
             }
         }
         iteration++;
