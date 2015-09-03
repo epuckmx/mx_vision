@@ -1,6 +1,5 @@
 #ifndef MX_VISION_H
 #define	MX_VISION_H
-#define MX_DEV
 
 #include <stdbool.h>
 
