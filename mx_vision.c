@@ -23,33 +23,63 @@ char buffer[BUFFER_SIZE];
 
 struct Object redObject = (struct Object) {0, 0, 0, 0};
 struct Object greenObject = (struct Object) {0, 0, 0, 0};
+struct Object blueObject = (struct Object) {0, 0, 0, 0};
 bool redDetected = false;
 bool greenDetected = false;
+bool blueDetected = false;
 
-char backup_ga[HEIGHT];
-char backup_gb[HEIGHT];
 char backup_ra[HEIGHT];
 char backup_rb[HEIGHT];
+char backup_ga[HEIGHT];
+char backup_gb[HEIGHT];
+char backup_ba[HEIGHT];
+char backup_bb[HEIGHT];
 
-void getColors(char x, char y, char* r, char* g) {
+// R
+
+void getColorR(char x, char y, char *r) {
+    char h = buffer[2 * (WIDTH * y + x)];
+    *r = h & 0xF8;
+}
+
+// G
+
+void getColorG(char x, char y, char *g) {
+    char h = buffer[2 * (WIDTH * y + x)];
+    char l = buffer[2 * (WIDTH * y + x) + 1];
+    *g = ((h & 0x07) << 5) | ((l & 0xE0) >> 3);
+}
+
+// B
+
+void getColorB(char x, char y, char *b) {
+	char l = buffer[2 * (WIDTH * y + x) + 1];
+    *b = (l & 0x1F) << 3;
+}
+
+// RG
+
+void getColorsRG(char x, char y, char* r, char* g) {
     char h = buffer[2 * (WIDTH * y + x)];
     char l = buffer[2 * (WIDTH * y + x) + 1];
     *r = h & 0xF8;
     *g = ((h & 0x07) << 5) | ((l & 0xE0) >> 3);
 }
 
-void getColorsRgb(char x, char y, char* r, char* g, char* b) {
+void setColorsRG(char x, char y, char r, char g) {
+    buffer[2 * (WIDTH * y + x)] = (r & 0xF8) | (g >> 5);
+    char byte = buffer[2 * (WIDTH * y + x) + 1] & 0x1F;
+    buffer[2 * (WIDTH * y + x) + 1] = (g << 5) | byte;
+}
+
+// RGB
+
+void getColorsRGB(char x, char y, char* r, char* g, char* b) {
     char h = buffer[2 * (WIDTH * y + x)];
     char l = buffer[2 * (WIDTH * y + x) + 1];
     *r = h & 0xF8;
     *g = ((h & 0x07) << 5) | ((l & 0xE0) >> 3);
     *b = (l & 0x1F) << 3;
-}
-
-void setColors(char x, char y, char r, char g) {
-    buffer[2 * (WIDTH * y + x)] = (r & 0xF8) | (g >> 5);
-    char byte = buffer[2 * (WIDTH * y + x) + 1] & 0x1F;
-    buffer[2 * (WIDTH * y + x) + 1] = (g << 5) | byte;
 }
 
 void setColorsRGB(char x, char y, char r, char g, char b) {
@@ -58,65 +88,82 @@ void setColorsRGB(char x, char y, char r, char g, char b) {
 }
 
 void medianFilter(void) {
-    char i, j, k, l, r, g;
-    char gs[9], rs[9];
+    char i, j, k, l, r, g, b;
+    char rs[9], gs[9], bs[9];
     for (j = 0; j < HEIGHT; ++j) {
-        getColors(0, j, &r, &g);
-        backup_ga[j] = g;
+        getColorsRGB(0, j, &r, &g, &b);
         backup_ra[j] = r;
+        backup_ga[j] = g;
+        backup_ba[j] = b;
     }
     for (i = 0; i < WIDTH; ++i) {
         if (i == 0 || i == WIDTH - 1) continue;
         for (j = 0; j < HEIGHT; ++j) {
-            getColors(i, j, &r, &g);
-            backup_gb[j] = g;
+            getColorsRGB(i, j, &r, &g, &b);
             backup_rb[j] = r;
+            backup_gb[j] = g;
+            backup_bb[j] = b;
         }
         for (j = 0; j < HEIGHT; ++j) {
             if (j == 0  || j == HEIGHT - 1) continue;
-            gs[0] = backup_ga[j - 1]; // i - 1
             rs[0] = backup_ra[j - 1]; // i - 1
-            getColors(i, j - 1, &r, &g);
-            gs[1] = g;
+            gs[0] = backup_ga[j - 1]; // i - 1
+            bs[0] = backup_ba[j - 1]; // i - 1
+            getColorsRGB(i, j - 1, &r, &g, &b);
             rs[1] = r;
-            getColors(i + 1, j - 1, &r, &g);
-            gs[2] = g;
+            gs[1] = g;
+            bs[1] = b;
+            getColorsRGB(i + 1, j - 1, &r, &g, &b);
             rs[2] = r;
-            gs[3] = backup_ga[j]; // i - 1
+            gs[2] = g;
+            bs[2] = b;
             rs[3] = backup_ra[j]; // i - 1
-            getColors(i, j, &r, &g);
-            gs[4] = g;
+            gs[3] = backup_ga[j]; // i - 1
+            bs[3] = backup_ba[j]; // i - 1
+            getColorsRGB(i, j, &r, &g, &b);
             rs[4] = r;
-            getColors(i + 1, j, &r, &g);
-            gs[5] = g;
+            gs[4] = g;
+            bs[4] = b;
+            getColorsRGB(i + 1, j, &r, &g, &b);
             rs[5] = r;
-            gs[6] = backup_ga[j + 1]; // i - 1
+            gs[5] = g;
+            bs[5] = b;
             rs[6] = backup_ra[j + 1]; // i - 1
-            getColors(i, j + 1, &r, &g);
-            gs[7] = g;
+            gs[6] = backup_ga[j + 1]; // i - 1
+            bs[6] = backup_ba[j + 1]; // i - 1
+            getColorsRGB(i, j + 1, &r, &g, &b);
             rs[7] = r;
-            getColors(i + 1, j + 1, &r, &g);
-            gs[8] = g;
+            gs[7] = g;
+            bs[7] = g;
+            getColorsRGB(i + 1, j + 1, &r, &g, &b);
             rs[8] = r;
+            gs[8] = g;
+            bs[8] = b;
             for (k = 0; k < 9; ++k) {
                 for (l = 0; l < (9 - k - 1); ++l) {
                     char t;
-                    if (gs[l + 1] < gs[l]) {
-                        t = gs[l + 1];
-                        gs[l + 1] = gs[l];
-                        gs[l] = t;
-                    }
                     if (rs[l + 1] < rs[l]) {
                         t = rs[l + 1];
                         rs[l + 1] = rs[l];
                         rs[l] = t;
                     }
+                    if (gs[l + 1] < gs[l]) {
+                        t = gs[l + 1];
+                        gs[l + 1] = gs[l];
+                        gs[l] = t;
+                    }
+                    if (bs[l + 1] < bs[l]) {
+                    	t = bs[l + 1];
+                    	bs[l + 1] = bs[l];
+                    	bs[l] = t;
+                    }
                 }
             }
-            setColors(i, j, rs[4], gs[4]);
+            setColorsRGB(i, j, rs[4], gs[4], bs[4]);
         }
-        memcpy(&backup_ga, &backup_gb, HEIGHT);
         memcpy(&backup_ra, &backup_rb, HEIGHT);
+        memcpy(&backup_ga, &backup_gb, HEIGHT);
+        memcpy(&backup_ba, &backup_bb, HEIGHT);
     }
 }
 
@@ -124,9 +171,10 @@ void binaryFilter(void) {
     char i, j, r, g, b;
     for (i = 0; i < WIDTH; ++i) {
         for (j = 0; j < HEIGHT; ++j) {
-            getColorsRgb(i, j, &r, &g, &b);
-            char rb = (r - g) + (r - b);
-            char gb = (g - r) + (g - b);
+            getColorsRGB(i, j, &r, &g, &b);
+            int rb = (r - g) + (r - b);
+            int gb = (g - r) + (g - b);
+            int bb = (b - r) + (b - g);
             if (rb > RED_THRESHOLD) {
                 rb = 32;
             } else {
@@ -137,45 +185,60 @@ void binaryFilter(void) {
             } else {
                 gb = 0;
             }
-            setColors(i, j, rb, gb);
+            if (bb > BLUE_THRESHOLD) {
+            	bb = 32;
+            } else {
+            	bb = 0;
+            }
+            setColorsRGB(i, j, rb, gb, bb);
         }
     }
 }
 
 void cleanBinaryFilter(void) {
-    char i, j, r, g, rs, gs, rn, gn;
+    char i, j, r, g, b, rs, gs, bs, rn, gn, bn;
     for (i = 0; i < WIDTH; ++i) {
         for (j = 0; j < HEIGHT; ++j) {
-            getColors(i, j, &r, &g);
+            getColorsRGB(i, j, &r, &g, &b);
             backup_gb[j] = g;
             backup_rb[j] = r;
+            backup_bb[j] = b;
         }
         for (j = 0; j < HEIGHT; ++j) {    
             if (i == 0 || i == WIDTH - 1 || j == 0 || j == HEIGHT - 1) {
-                setColors(i, j, 0, 0);
+                setColorsRGB(i, j, 0, 0, 0);
                 continue;
             }
             rs = 0;
             gs = 0;
+            bs = 0;
             rn = 0;
             gn = 0;
+            bn = 0;
             if (backup_rb[j - 1] > 0) rs++;
             if (backup_gb[j - 1] > 0) gs++;
+            if (backup_bb[j - 1] > 0) bs++;
             if (backup_ra[j] > 0) rs++;
             if (backup_ga[j] > 0) gs++;
+            if (backup_ba[j] > 0) bs++;
             if (backup_rb[j] > 0) rs++;
             if (backup_gb[j] > 0) gs++;
-            getColors(i + 1, j, &r, &g);
+            if (backup_bb[j] > 0) bs++;
+            getColorsRGB(i + 1, j, &r, &g, &b);
             if (r > 0) rs++;
             if (g > 0) gs++;
+            if (b > 0) bs++;
             if (backup_rb[j + 1] > 0) rs++;
             if (backup_gb[j + 1] > 0) gs++;
+            if (backup_bb[j + 1] > 0) bs++;
             if (rs > 3) rn = 32;
             if (gs > 3) gn = 32;
-            setColors(i, j, rn, gn);
+            if (bs > 3) bn = 32;
+            setColorsRGB(i, j, rn, gn, bn);
         }
-        memcpy(&backup_ga, &backup_gb, HEIGHT);
         memcpy(&backup_ra, &backup_rb, HEIGHT);
+        memcpy(&backup_ga, &backup_gb, HEIGHT);
+        memcpy(&backup_ba, &backup_bb, HEIGHT);
     }
 }
 
@@ -185,12 +248,12 @@ void lookForRedEdges(char ix, char iy, char* hu, char* wr, char* hd, char* wl) {
     *hd = iy;
     *wl = ix;
     char r, g;
-    getColors(ix, iy, &r, &g);
+    getColorsRG(ix, iy, &r, &g);
     char rr = r, gr = g;
     while (rr > 0) {
         (*hu)--;
         if (*hu > 0) {
-            getColors(ix, *hu, &rr, &gr);
+            getColorsRG(ix, *hu, &rr, &gr);
             if (rr == 0) {
                 (*hu)++;
                 break;
@@ -204,7 +267,7 @@ void lookForRedEdges(char ix, char iy, char* hu, char* wr, char* hd, char* wl) {
     while (rr > 0) {
         (*wr)++;
         if (*wr < WIDTH - 1) {
-            getColors(*wr, iy, &rr, &gr);
+            getColorsRG(*wr, iy, &rr, &gr);
             if (rr == 0) {
                 (*wr)--;
                 break;
@@ -218,7 +281,7 @@ void lookForRedEdges(char ix, char iy, char* hu, char* wr, char* hd, char* wl) {
     while (rr > 0) {
         (*hd)++;
         if (*hd < HEIGHT - 1) {
-            getColors(ix, *hd, &rr, &gr);
+            getColorsRG(ix, *hd, &rr, &gr);
             if (rr == 0) {
                 (*hd)--;
                 break;
@@ -232,7 +295,7 @@ void lookForRedEdges(char ix, char iy, char* hu, char* wr, char* hd, char* wl) {
     while (rr > 0) {
         (*wl)--;
         if (*wl > 0) {
-            getColors(*wl, iy, &rr, &gr);
+            getColorsRG(*wl, iy, &rr, &gr);
             if (rr == 0) {
                 (*wl)++;
                 break;
@@ -250,12 +313,12 @@ void lookForGreenEdges(char ix, char iy, char* hu, char* wr, char* hd, char* wl)
     *hd = iy;
     *wl = ix;
     char r, g;
-    getColors(ix, iy, &r, &g);
+    getColorsRG(ix, iy, &r, &g);
     char rr = r, gr = g;
     while (gr > 0) {
         (*hu)--;
         if (*hu > 0) {
-            getColors(ix, *hu, &rr, &gr);
+            getColorsRG(ix, *hu, &rr, &gr);
             if (gr == 0) {
                 (*hu)++;
                 break;
@@ -269,7 +332,7 @@ void lookForGreenEdges(char ix, char iy, char* hu, char* wr, char* hd, char* wl)
     while (gr > 0) {
         (*wr)++;
         if (*wr < WIDTH - 1) {
-            getColors(*wr, iy, &rr, &gr);
+            getColorsRG(*wr, iy, &rr, &gr);
             if (gr == 0) {
                 (*wr)--;
                 break;
@@ -283,7 +346,7 @@ void lookForGreenEdges(char ix, char iy, char* hu, char* wr, char* hd, char* wl)
     while (gr > 0) {
         (*hd)++;
         if (*hd < HEIGHT - 1) {
-            getColors(ix, *hd, &rr, &gr);
+            getColorsRG(ix, *hd, &rr, &gr);
             if (gr == 0) {
                 (*hd)--;
                 break;
@@ -297,8 +360,73 @@ void lookForGreenEdges(char ix, char iy, char* hu, char* wr, char* hd, char* wl)
     while (gr > 0) {
         (*wl)--;
         if (*wl > 0) {
-            getColors(*wl, iy, &rr, &gr);
+            getColorsRG(*wl, iy, &rr, &gr);
             if (gr == 0) {
+                (*wl)++;
+                break;
+            }
+        } else {
+            (*wl)++;
+            break;
+        }
+    }
+}
+
+void lookForBlueEdges(char ix, char iy, char* hu, char* wr, char* hd, char* wl) {
+    *hu = iy;
+    *wr = ix;
+    *hd = iy;
+    *wl = ix;
+    char b;
+    getColorB(ix, iy, &b);
+    char br = b;
+    while (br > 0) {
+        (*hu)--;
+        if (*hu > 0) {
+            getColorB(ix, *hu, &br);
+            if (br == 0) {
+                (*hu)++;
+                break;
+            }
+        } else {
+            (*hu)++;
+            break;
+        }
+    }
+    br = b;
+    while (br > 0) {
+        (*wr)++;
+        if (*wr < WIDTH - 1) {
+            getColorB(*wr, iy, &br);
+            if (br == 0) {
+                (*wr)--;
+                break;
+            }
+        } else {
+            (*wr)--;
+            break;
+        }
+    }
+    br = b;
+    while (br > 0) {
+        (*hd)++;
+        if (*hd < HEIGHT - 1) {
+            getColorB(ix, *hd, &br);
+            if (br == 0) {
+                (*hd)--;
+                break;
+            }
+        } else {
+            (*hd)--;
+            break;
+        }
+    }
+    br = b;
+    while (br > 0) {
+        (*wl)--;
+        if (*wl > 0) {
+            getColorB(*wl, iy, &br);
+            if (br == 0) {
                 (*wl)++;
                 break;
             }
@@ -318,7 +446,7 @@ void detectChannelRed(void) {
         char iy = (char)(index / HEIGHT);
         if (ix == 0 || ix == WIDTH - 1 || iy == 0 || iy == HEIGHT - 1) continue;
         char r, g;
-        getColors(ix, iy, &r, &g);
+        getColorsRG(ix, iy, &r, &g);
         if (r > 0) {
             int area = 0;
             int newArea = 1;
@@ -362,7 +490,7 @@ void detectChannelGreen(void) {
         char iy = (char)(index / HEIGHT);
         if (ix == 0 || ix == WIDTH - 1 || iy == 0 || iy == HEIGHT - 1) continue;
         char r, g;
-        getColors(ix, iy, &r, &g);
+        getColorsRG(ix, iy, &r, &g);
         if (g > 0) {
             int area = 0;
             int newArea = 1;
@@ -390,6 +518,50 @@ void detectChannelGreen(void) {
                 greenDetected = true;
                 #ifdef MX_DEV
                 	printf("Green object\n");
+                #endif
+            }
+        }
+        iteration++;
+    }
+}
+
+void detectChannelBlue(void) {
+	bool objectDetected = false;
+    int iteration = 0;
+    while (!objectDetected && iteration < PIXELS / 2) {
+        int index = rand() % PIXELS;
+        char ix = (char)(index % WIDTH);
+        char iy = (char)(index / HEIGHT);
+        if (ix == 0 || ix == WIDTH - 1 || iy == 0 || iy == HEIGHT - 1) continue;
+        char b;
+        getColorB(ix, iy, &b);
+        if (b > 0) {
+            int area = 0;
+            int newArea = 1;
+            struct Object rect = (struct Object) {0, 0, 0, 0};
+            struct Object newRect = (struct Object) {0, 0, 1, 1};
+            while (newArea > area) {
+                area = newArea;
+                rect = newRect;
+                char hu = iy, wr = ix, hd = iy, wl = ix;
+                lookForBlueEdges(ix, iy, &hu, &wr, &hd, &wl);
+                #ifdef MX_DEV
+                	printf("Rect blue %d %d %d %d\n", hu, wr, hd, wl);
+                #endif
+                newRect.x = wl;
+                newRect.y = hu;
+                newRect.w = wr - wl + 1;
+                newRect.h = hd - hu + 1;
+                newArea = newRect.w * newRect.h;
+                ix = newRect.x + newRect.w / 2;
+                iy = newRect.y + newRect.h / 2;
+            }
+            if (rect.w >= MIN_WIDTH && rect.h >= MIN_HEIGHT) {
+                objectDetected = true;
+                blueObject = rect;
+                blueDetected = true;
+                #ifdef MX_DEV
+                	printf("Blue object\n");
                 #endif
             }
         }
@@ -440,10 +612,11 @@ void detectChannelGreen(void) {
     	medianFilter();
     	binaryFilter();
     	cleanBinaryFilter();
+    	// Red object
     	printf("Red channel\n");
     	for (j = 1; j < HEIGHT - 1; j++) {
         	for (i = 1; i < WIDTH - 1; i++) {
-            	getColors(i, j, &r, &g);
+            	getColorsRG(i, j, &r, &g);
             	if (r > 0) {
                 	printf("X");
             	} else {
@@ -475,10 +648,11 @@ void detectChannelGreen(void) {
         	}
         	printf("\n");
     	}
+    	// Green object
     	printf("Green channel\n");
     	for (j = 1; j < HEIGHT - 1; j++) {
         	for (i = 1; i < WIDTH - 1; i++) {
-            	getColors(i, j, &r, &g);
+            	getColorsRG(i, j, &r, &g);
             	if (g > 0) {
                 	printf("X");
             	} else {
@@ -511,6 +685,43 @@ void detectChannelGreen(void) {
         	printf("\n");
     	}
     	printf("\n");
+    	// Blue object
+    	printf("Blue channel\n");
+    	for (j = 1; j < HEIGHT - 1; j++) {
+        	for (i = 1; i < WIDTH - 1; i++) {
+            	getColorB(i, j, &b);
+            	if (b > 0) {
+                	printf("X");
+            	} else {
+                	printf("·");
+            	}
+        	}
+        	printf("\n");
+    	}
+    	detectChannelBlue();
+    	for (j = 1; j < HEIGHT - 1; j++) {
+        	for (i = 1; i < WIDTH - 1; i++) {
+            	screen[j][i] = '.';
+        	}
+    	}
+    	if (blueDetected) {
+        	for (i = blueObject.x; i < blueObject.x + blueObject.w; i++) {
+            	screen[blueObject.y][i] = 'X';
+            	screen[blueObject.y + blueObject.h][i] = 'X';
+        	}
+        	for (j = blueObject.y; j < blueObject.y + blueObject.h; j++) {
+            	screen[j][blueObject.x] = 'X';
+            	screen[j][blueObject.x + blueObject.w] = 'X';
+        	}
+    	}
+    	printf("Blue object detected\n");
+    	for (j = 1; j < HEIGHT - 1; j++) {
+        	for (i = 1; i < WIDTH - 1; i++) {
+            	printf("%c", screen[j][i]);
+        	}
+        	printf("\n");
+    	}
+    	printf("\n");
 	}
 #else
 	void see(void) {
@@ -522,5 +733,7 @@ void detectChannelGreen(void) {
     	binaryFilter();
     	cleanBinaryFilter();
     	detectChannelRed();
+    	detectChannelGreen();
+    	detectChannelBlue();
 	}
 #endif
