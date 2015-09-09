@@ -10,7 +10,7 @@
 #define PIXELS (WIDTH * HEIGHT) // pixels in camera
 #define RED_THRESHOLD 40 // used for binary filter
 #define GREEN_THRESHOLD 40 // used for binary filter
-#define BLUE_THRESHOLD 40 // used for binary filter
+#define BLUE_THRESHOLD 30 // used for binary filter
 #define MIN_WIDTH 5
 #define MIN_HEIGHT 5
 

@@ -17,6 +17,10 @@ int main() {
 	printf("Fourth test\n");
 	printf("---------------------\n");
 	init(3);
+	see();	
+	printf("Fifth test\n");
+	printf("---------------------\n");
+	init(4);
 	see();
 	return 0;
 }
