@@ -23,12 +23,24 @@
 
 char buffer[BUFFER_SIZE];
 
-struct Object redObject = (struct Object) {0, 0, 0, 0};
-struct Object greenObject = (struct Object) {0, 0, 0, 0};
-struct Object blueObject = (struct Object) {0, 0, 0, 0};
-bool redDetected = false;
-bool greenDetected = false;
-bool blueDetected = false;
+struct Rect {
+	char x;
+	char y;
+	char w;
+	char h;
+};
+
+struct Rect redObject = (struct Rect) {0, 0, 0, 0};
+struct Rect greenObject = (struct Rect) {0, 0, 0, 0};
+struct Rect blueObject = (struct Rect) {0, 0, 0, 0};
+
+struct Object red;
+struct Object green;
+struct Object blue;
+
+char redsDetected = 0;
+char greensDetected = 0;
+char bluesDetected = 0;
 
 char backup_ra[HEIGHT];
 char backup_rb[HEIGHT];
@@ -440,20 +452,20 @@ void lookForBlueEdges(char ix, char iy, char* hu, char* wr, char* hd, char* wl) 
 }
 
 void detectChannelRed(void) {
-    bool objectDetected = false;
+    char objectDetected = 0;
     int iteration = 0;
-    while (!objectDetected && iteration < PIXELS / 2) {
+    while (objectDetected == 0 && iteration < PIXELS / 2) {
         int index = rand() % PIXELS;
         char ix = (char)(index % WIDTH);
-        char iy = (char)(index / HEIGHT);
+        char iy = (char)(index / WIDTH);
         if (ix == 0 || ix == WIDTH - 1 || iy == 0 || iy == HEIGHT - 1) continue;
         char r, g;
         getColorsRG(ix, iy, &r, &g);
         if (r > 0) {
             int area = 0;
             int newArea = 1;
-            struct Object rect = (struct Object) {0, 0, 0, 0};
-            struct Object newRect = (struct Object) {0, 0, 1, 1};
+            struct Rect rect = (struct Rect) {0, 0, 0, 0};
+            struct Rect newRect = (struct Rect) {0, 0, 1, 1};
             while (newArea > area) {
                 area = newArea;
                 rect = newRect;
@@ -471,9 +483,11 @@ void detectChannelRed(void) {
                 iy = newRect.y + newRect.h / 2;
             }
             if (rect.w >= MIN_WIDTH && rect.h >= MIN_HEIGHT) {
-                objectDetected = true;
+                objectDetected = 1;
                 redObject = rect;
-                redDetected = true;
+                redsDetected = 1;
+                red.dis = 550 / rect.w;
+                red.dir = (rect.x + rect.w / 2 - 40) * -1.5;
                 #ifdef MX_DEV
                 	printf("Red object\n");
                 #endif
@@ -484,20 +498,20 @@ void detectChannelRed(void) {
 }
 
 void detectChannelGreen(void) {
-    bool objectDetected = false;
+    char objectDetected = 0;
     int iteration = 0;
-    while (!objectDetected && iteration < PIXELS / 2) {
+    while (objectDetected == 0 && iteration < PIXELS / 2) {
         int index = rand() % PIXELS;
         char ix = (char)(index % WIDTH);
-        char iy = (char)(index / HEIGHT);
+        char iy = (char)(index / WIDTH);
         if (ix == 0 || ix == WIDTH - 1 || iy == 0 || iy == HEIGHT - 1) continue;
         char r, g;
         getColorsRG(ix, iy, &r, &g);
         if (g > 0) {
             int area = 0;
             int newArea = 1;
-            struct Object rect = (struct Object) {0, 0, 0, 0};
-            struct Object newRect = (struct Object) {0, 0, 1, 1};
+            struct Rect rect = (struct Rect) {0, 0, 0, 0};
+            struct Rect newRect = (struct Rect) {0, 0, 1, 1};
             while (newArea > area) {
                 area = newArea;
                 rect = newRect;
@@ -515,9 +529,11 @@ void detectChannelGreen(void) {
                 iy = newRect.y + newRect.h / 2;
             }
             if (rect.w >= MIN_WIDTH && rect.h >= MIN_HEIGHT) {
-                objectDetected = true;
+                objectDetected = 1;
                 greenObject = rect;
-                greenDetected = true;
+                greensDetected = 1;
+                green.dis = 550 / rect.w;
+                green.dir = (rect.x + rect.w / 2 - 40) * -1.5;
                 #ifdef MX_DEV
                 	printf("Green object\n");
                 #endif
@@ -528,20 +544,20 @@ void detectChannelGreen(void) {
 }
 
 void detectChannelBlue(void) {
-	bool objectDetected = false;
+	char objectDetected = 0;
     int iteration = 0;
-    while (!objectDetected && iteration < PIXELS / 2) {
+    while (objectDetected == 0 && iteration < PIXELS / 2) {
         int index = rand() % PIXELS;
         char ix = (char)(index % WIDTH);
-        char iy = (char)(index / HEIGHT);
+        char iy = (char)(index / WIDTH);
         if (ix == 0 || ix == WIDTH - 1 || iy == 0 || iy == HEIGHT - 1) continue;
         char b;
         getColorB(ix, iy, &b);
         if (b > 0) {
             int area = 0;
             int newArea = 1;
-            struct Object rect = (struct Object) {0, 0, 0, 0};
-            struct Object newRect = (struct Object) {0, 0, 1, 1};
+            struct Rect rect = (struct Rect) {0, 0, 0, 0};
+            struct Rect newRect = (struct Rect) {0, 0, 1, 1};
             while (newArea > area) {
                 area = newArea;
                 rect = newRect;
@@ -559,9 +575,11 @@ void detectChannelBlue(void) {
                 iy = newRect.y + newRect.h / 2;
             }
             if (rect.w >= MIN_WIDTH && rect.h >= MIN_HEIGHT) {
-                objectDetected = true;
+                objectDetected = 1;
                 blueObject = rect;
-                blueDetected = true;
+                bluesDetected = 1;
+                blue.dis = 550 / rect.w;
+                blue.dir = (rect.x + rect.w / 2 - 40) * -1.5;
                 #ifdef MX_DEV
                 	printf("Blue object\n");
                 #endif
@@ -611,8 +629,9 @@ void detectChannelBlue(void) {
 	char screen[HEIGHT][WIDTH];
 
 	void see(void) {
-    	redDetected = false;
-    	greenDetected = false;
+    	redsDetected = 0;
+    	greensDetected = 0;
+    	bluesDetected = 0;
     	char i, j, r, g, b;
     	medianFilter();
     	binaryFilter();
@@ -636,7 +655,7 @@ void detectChannelBlue(void) {
             	screen[j][i] = '.';
         	}
     	}
-    	if (redDetected) {
+    	if (redsDetected > 0) {
         	for (i = redObject.x; i < redObject.x + redObject.w; i++) {
             	screen[redObject.y][i] = 'X';
             	screen[redObject.y + redObject.h][i] = 'X';
@@ -645,6 +664,9 @@ void detectChannelBlue(void) {
             	screen[j][redObject.x] = 'X';
             	screen[j][redObject.x + redObject.w] = 'X';
         	}
+        	red.dis = (char)(550 / redObject.w);
+        	red.dir = (char)((redObject.x + redObject.w / 2 - 20) * 1.5);
+        	printf("Red object at distance %d and direction %d\n", red.dis, red.dir);
     	}
     	printf("Red object detected\n");
     	for (j = 1; j < HEIGHT - 1; j++) {
@@ -672,7 +694,7 @@ void detectChannelBlue(void) {
             	screen[j][i] = '.';
         	}
     	}
-    	if (greenDetected) {
+    	if (greensDetected > 0) {
         	for (i = greenObject.x; i < greenObject.x + greenObject.w; i++) {
             	screen[greenObject.y][i] = 'X';
             	screen[greenObject.y + greenObject.h][i] = 'X';
@@ -709,7 +731,7 @@ void detectChannelBlue(void) {
             	screen[j][i] = '.';
         	}
     	}
-    	if (blueDetected) {
+    	if (bluesDetected > 0) {
         	for (i = blueObject.x; i < blueObject.x + blueObject.w; i++) {
             	screen[blueObject.y][i] = 'X';
             	screen[blueObject.y + blueObject.h][i] = 'X';
@@ -730,8 +752,9 @@ void detectChannelBlue(void) {
 	}
 #else
 	void see(void) {
-		redDetected = false;
-    	greenDetected = false;
+		redsDetected = 0;
+    	greensDetected = 0;
+        bluesDetected = 0;
     	e_poxxxx_launch_capture(buffer);
     	while (!e_poxxxx_is_img_ready());
     	medianFilter();
