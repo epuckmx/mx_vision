@@ -590,7 +590,7 @@ void detectChannelBlue(void) {
 }
 
 #ifdef MX_DEV
-	void init(int test) {
+	void mx_init(int test) {
     	time_t s = time(0);
     	srand((unsigned)s);
 		switch (test) {
@@ -612,13 +612,13 @@ void detectChannelBlue(void) {
 		}
 	}
 #else
-	void init(void) {
+	void mx_init(void) {
 		e_poxxxx_init_cam();
     	e_poxxxx_config_cam(0, 160, WIDTH * ZOOM, HEIGHT * ZOOM, ZOOM, ZOOM, RGB_565_MODE);
     	e_poxxxx_write_cam_registers();
 	}
 
-	void initRand(void) {
+	void mx_initRand(void) {
     	time_t s = time(0);
     	srand((unsigned)s);
     	init();
@@ -628,7 +628,7 @@ void detectChannelBlue(void) {
 #ifdef MX_DEV
 	char screen[HEIGHT][WIDTH];
 
-	void see(void) {
+	void mx_see(void) {
     	redsDetected = 0;
     	greensDetected = 0;
     	bluesDetected = 0;
@@ -751,7 +751,7 @@ void detectChannelBlue(void) {
     	printf("\n");
 	}
 #else
-	void see(void) {
+	void mx_see(void) {
 		redsDetected = 0;
     	greensDetected = 0;
         bluesDetected = 0;
