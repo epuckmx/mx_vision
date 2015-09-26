@@ -25,11 +25,10 @@ extern char greensDetected;
 extern char bluesDetected;
 
 #ifdef MX_DEV
-	void mx_init(int test);
+	void mx_vision_init(int test);
 #else
-	void mx_init(void);
-	void mx_initRand(void);
+	void mx_vision_init(void);
 #endif
-void mx_see(void);
+void mx_vision_see(void);
 
 #endif

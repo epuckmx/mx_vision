@@ -9,16 +9,16 @@ If you want to run the tests in a desktop just run
 
 ### Usage
 
-Import ```mx_vision.h``` into your code. Call ```mx_init()``` after ```e_init_port()```. Then, in your main loop call ```mx_see()``` to perform a seach using the data received in the camera. Example:
+Import ```mx_vision.h``` into your code. Call ```mx_vision_init()``` after ```e_init_port()```. Then, in your main loop call ```mx_vision_see()``` to perform a seach using the data received in the camera. Example:
 
     #include "e_init_port.h"
     #include "mx_vision.h"
 
     int main(void) {
     	e_init_port();
-    	mx_init();
+    	mx_vision_init();
     	while (1) {
-    		mx_see();
+    		mx_vision_see();
     		// redsDetected = number of red objects, available in red struct
     		// greensDetected = number of green objects, available in green struct
     		// bluesDetected = number of blue objects, available in blue struct
