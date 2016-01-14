@@ -13,8 +13,8 @@
 #define MIN_HEIGHT 5
 
 struct Object {
-	char dis;
-	char dir;
+    int dis;
+    int dir;
 };
 
 extern struct Object red;
@@ -24,11 +24,11 @@ extern char redsDetected;
 extern char greensDetected;
 extern char bluesDetected;
 
+void mx_vision_init(void);
 #ifdef MX_DEV
-	void mx_vision_init(int test);
+    void mx_vision_see(char[BUFFER_SIZE] image);
 #else
-	void mx_vision_init(void);
+    void mx_vision_see(void);
 #endif
-void mx_vision_see(void);
 
 #endif
