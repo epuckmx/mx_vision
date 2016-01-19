@@ -29,68 +29,69 @@ int redsDetected = 0;
 int greensDetected = 0;
 int bluesDetected = 0;
 
-char backup_ra[HEIGHT];
-char backup_rb[HEIGHT];
-char backup_ga[HEIGHT];
-char backup_gb[HEIGHT];
-char backup_ba[HEIGHT];
-char backup_bb[HEIGHT];
+unsigned char backup_ra[HEIGHT];
+unsigned char backup_rb[HEIGHT];
+unsigned char backup_ga[HEIGHT];
+unsigned char backup_gb[HEIGHT];
+unsigned char backup_ba[HEIGHT];
+unsigned char backup_bb[HEIGHT];
 
 // R
 
-void getColorR(char x, char y, char *r) {
-    char h = buffer[2 * (WIDTH * y + x)];
+void getColorR(int x, int y, unsigned char *r) {
+    unsigned char h = buffer[2 * (WIDTH * y + x)];
     *r = h & 0xF8;
 }
 
 // G
 
-void getColorG(char x, char y, char *g) {
-    char h = buffer[2 * (WIDTH * y + x)];
-    char l = buffer[2 * (WIDTH * y + x) + 1];
+void getColorG(int x, int y, unsigned char *g) {
+    unsigned char h = buffer[2 * (WIDTH * y + x)];
+    unsigned char l = buffer[2 * (WIDTH * y + x) + 1];
     *g = ((h & 0x07) << 5) | ((l & 0xE0) >> 3);
 }
 
 // B
 
-void getColorB(char x, char y, char *b) {
-    char l = buffer[2 * (WIDTH * y + x) + 1];
+void getColorB(int x, int y, unsigned char *b) {
+    unsigned char l = buffer[2 * (WIDTH * y + x) + 1];
     *b = (l & 0x1F) << 3;
 }
 
 // RG
 
-void getColorsRG(char x, char y, char* r, char* g) {
-    char h = buffer[2 * (WIDTH * y + x)];
-    char l = buffer[2 * (WIDTH * y + x) + 1];
+void getColorsRG(int x, int y, unsigned char* r, unsigned char* g) {
+    unsigned char h = buffer[2 * (WIDTH * y + x)];
+    unsigned char l = buffer[2 * (WIDTH * y + x) + 1];
     *r = h & 0xF8;
     *g = ((h & 0x07) << 5) | ((l & 0xE0) >> 3);
 }
 
-void setColorsRG(char x, char y, char r, char g) {
+void setColorsRG(int x, int y, unsigned char r, unsigned char g) {
     buffer[2 * (WIDTH * y + x)] = (r & 0xF8) | (g >> 5);
-    char byte = buffer[2 * (WIDTH * y + x) + 1] & 0x1F;
+    unsigned char byte = buffer[2 * (WIDTH * y + x) + 1] & 0x1F;
     buffer[2 * (WIDTH * y + x) + 1] = (g << 5) | byte;
 }
 
 // RGB
 
-void getColorsRGB(char x, char y, char* r, char* g, char* b) {
-    char h = buffer[2 * (WIDTH * y + x)];
-    char l = buffer[2 * (WIDTH * y + x) + 1];
+void getColorsRGB(int x, int y, unsigned char *r, unsigned char *g, unsigned char *b) {
+    unsigned char h = buffer[2 * (WIDTH * y + x)];
+    unsigned char l = buffer[2 * (WIDTH * y + x) + 1];
     *r = h & 0xF8;
     *g = ((h & 0x07) << 5) | ((l & 0xE0) >> 3);
     *b = (l & 0x1F) << 3;
 }
 
-void setColorsRGB(char x, char y, char r, char g, char b) {
+void setColorsRGB(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
     buffer[2 * (WIDTH * y + x)] = (r & 0xF8) | (g >> 5);
     buffer[2 * (WIDTH * y + x) + 1] = ((g & 0x1F) << 5) | (b >> 3);
 }
 
 void medianFilter(void) {
-    char i, j, k, l, r, g, b;
-    char rs[9], gs[9], bs[9];
+    int i, j, k, l;
+    unsigned char r, g, b;
+    unsigned char rs[9], gs[9], bs[9];
     for (j = 0; j < HEIGHT; ++j) {
         getColorsRGB(0, j, &r, &g, &b);
         backup_ra[j] = r;
@@ -169,7 +170,8 @@ void medianFilter(void) {
 }
 
 void binaryFilter(void) {
-    char i, j, r, g, b;
+    int i, j; 
+    unsigned char r, g, b;
     for (i = 0; i < WIDTH; ++i) {
         for (j = 0; j < HEIGHT; ++j) {
             getColorsRGB(i, j, &r, &g, &b);
@@ -197,7 +199,8 @@ void binaryFilter(void) {
 }
 
 void granularityFilter(void) {
-    char i, j, r, g, b, rs, gs, bs, rn, gn, bn;
+    int i, j; 
+    unsigned char r, g, b, rs, gs, bs, rn, gn, bn;
     for (i = 0; i < WIDTH; ++i) {
         for (j = 0; j < HEIGHT; ++j) {
             getColorsRGB(i, j, &r, &g, &b);
@@ -243,14 +246,14 @@ void granularityFilter(void) {
     }
 }
 
-void lookForRedEdges(char ix, char iy, char* hu, char* wr, char* hd, char* wl) {
+void lookForRedEdges(int ix, int iy, int* hu, int* wr, int* hd, int* wl) {
     *hu = iy;
     *wr = ix;
     *hd = iy;
     *wl = ix;
-    char r;
+    unsigned char r;
     getColorR(ix, iy, &r);
-    char rr = r;
+    unsigned char rr = r;
     while (rr > 0) {
         (*hu)--;
         if (*hu > 0) {
@@ -308,14 +311,14 @@ void lookForRedEdges(char ix, char iy, char* hu, char* wr, char* hd, char* wl) {
     }
 }
 
-void lookForGreenEdges(char ix, char iy, char* hu, char* wr, char* hd, char* wl) {
+void lookForGreenEdges(int ix, int iy, int* hu, int* wr, int* hd, int* wl) {
     *hu = iy;
     *wr = ix;
     *hd = iy;
     *wl = ix;
-    char g;
+    unsigned char g;
     getColorG(ix, iy, &g);
-    char gr = g;
+    unsigned char gr = g;
     while (gr > 0) {
         (*hu)--;
         if (*hu > 0) {
@@ -373,14 +376,14 @@ void lookForGreenEdges(char ix, char iy, char* hu, char* wr, char* hd, char* wl)
     }
 }
 
-void lookForBlueEdges(char ix, char iy, char* hu, char* wr, char* hd, char* wl) {
+void lookForBlueEdges(int ix, int iy, int* hu, int* wr, int* hd, int* wl) {
     *hu = iy;
     *wr = ix;
     *hd = iy;
     *wl = ix;
-    char b;
+    unsigned char b;
     getColorB(ix, iy, &b);
-    char br = b;
+    unsigned char br = b;
     while (br > 0) {
         (*hu)--;
         if (*hu > 0) {
@@ -443,10 +446,10 @@ void detectChannelRed(void) {
     int iteration = 0;
     while (objectDetected == 0 && iteration < PIXELS / 2) {
         int index = rand() % PIXELS;
-        char ix = (char)(index % WIDTH);
-        char iy = (char)(index / WIDTH);
+        int ix = index % WIDTH;
+        int iy = index / WIDTH;
         if (ix == 0 || ix == WIDTH - 1 || iy == 0 || iy == HEIGHT - 1) continue;
-        char r;
+        unsigned char r;
         getColorR(ix, iy, &r);
         if (r > 0) {
             int area = 0;
@@ -456,10 +459,10 @@ void detectChannelRed(void) {
             while (newArea > area) {
                 area = newArea;
                 rect = newRect;
-                char hu = iy, wr = ix, hd = iy, wl = ix;
+                int hu = iy, wr = ix, hd = iy, wl = ix;
                 lookForRedEdges(ix, iy, &hu, &wr, &hd, &wl);
                 #ifdef MX_DEV
-                    printf("Rect red %d %d %d %d\n", hu, wr, hd, wl);
+		//printf("Rect red %d %d %d %d\n", hu, wr, hd, wl);
                 #endif
                 newRect.x = wl;
                 newRect.y = hu;
@@ -489,10 +492,10 @@ void detectChannelGreen(void) {
     int iteration = 0;
     while (objectDetected == 0 && iteration < PIXELS / 2) {
         int index = rand() % PIXELS;
-        char ix = (char)(index % WIDTH);
-        char iy = (char)(index / WIDTH);
+        int ix = index % WIDTH;
+        int iy = index / WIDTH;
         if (ix == 0 || ix == WIDTH - 1 || iy == 0 || iy == HEIGHT - 1) continue;
-        char g;
+        unsigned char g;
         getColorG(ix, iy, &g);
         if (g > 0) {
             int area = 0;
@@ -502,7 +505,7 @@ void detectChannelGreen(void) {
             while (newArea > area) {
                 area = newArea;
                 rect = newRect;
-                char hu = iy, wr = ix, hd = iy, wl = ix;
+                int hu = iy, wr = ix, hd = iy, wl = ix;
                 lookForGreenEdges(ix, iy, &hu, &wr, &hd, &wl);
                 #ifdef MX_DEV
                     printf("Rect green %d %d %d %d\n", hu, wr, hd, wl);
@@ -535,10 +538,10 @@ void detectChannelBlue(void) {
     int iteration = 0;
     while (objectDetected == 0 && iteration < PIXELS / 2) {
         int index = rand() % PIXELS;
-        char ix = (char)(index % WIDTH);
-        char iy = (char)(index / WIDTH);
+        int ix = index % WIDTH;
+        int iy = index / WIDTH;
         if (ix == 0 || ix == WIDTH - 1 || iy == 0 || iy == HEIGHT - 1) continue;
-        char b;
+        unsigned char b;
         getColorB(ix, iy, &b);
         if (b > 0) {
             int area = 0;
@@ -548,10 +551,10 @@ void detectChannelBlue(void) {
             while (newArea > area) {
                 area = newArea;
                 rect = newRect;
-                char hu = iy, wr = ix, hd = iy, wl = ix;
+                int hu = iy, wr = ix, hd = iy, wl = ix;
                 lookForBlueEdges(ix, iy, &hu, &wr, &hd, &wl);
                 #ifdef MX_DEV
-                    printf("Rect blue %d %d %d %d\n", hu, wr, hd, wl);
+		//printf("Rect blue %d %d %d %d\n", hu, wr, hd, wl);
                 #endif
                 newRect.x = wl;
                 newRect.y = hu;
@@ -568,7 +571,7 @@ void detectChannelBlue(void) {
                 blue.dis = 550 / rect.w;
                 blue.dir = (rect.x + rect.w / 2 - WIDTH) * 1.5;
                 #ifdef MX_DEV
-                    printf("Blue object\n");
+		    printf("Blue object\n");
                 #endif
             }
         }
@@ -596,17 +599,11 @@ void detectChannelBlue(void) {
         greensDetected = 0;
         bluesDetected = 0;
         memcpy(buffer, image, BUFFER_SIZE);
-        int i, checksum = 0;
-        for (i = 0; i < BUFFER_SIZE; ++i) {
-	    printf("%d ", buffer[i]);
-	    checksum += buffer[i];
-        }
-        printf("\nSum %d\n", checksum);
-        //medianFilter();
-        //binaryFilter();
-        //granularityFilter();
-        //detectChannelRed();
-        //detectChannelBlue();
+        medianFilter();
+        binaryFilter();
+        granularityFilter();
+        detectChannelRed();
+        detectChannelBlue();
         //printf("Finishing see\n");
     }
 #else
