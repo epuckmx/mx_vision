@@ -462,7 +462,7 @@ void detectChannelRed(void) {
                 int hu = iy, wr = ix, hd = iy, wl = ix;
                 lookForRedEdges(ix, iy, &hu, &wr, &hd, &wl);
                 #ifdef MX_DEV
-		//printf("Rect red %d %d %d %d\n", hu, wr, hd, wl);
+                    //printf("Rect red %d %d %d %d\n", hu, wr, hd, wl);
                 #endif
                 newRect.x = wl;
                 newRect.y = hu;
@@ -474,10 +474,18 @@ void detectChannelRed(void) {
             }
             if (rect.w >= MIN_WIDTH && rect.h >= MIN_HEIGHT) {
                 objectDetected = 1;
+                double ratio = (double)rect.w / rect.h;
+                if (ratio < RATIO_THRESHOLD) {
+                    int w = rect.w;
+                    rect.w = (int)(1.33 * rect.h);
+                    if (rect.x < WIDTH / 2) {
+                        rect.x -= (rect.w - w);
+                    }
+                }
                 redObject = rect;
                 redsDetected = 1;
                 red.dis = 550 / rect.w;
-                red.dir = (rect.x + rect.w / 2 - WIDTH) * 1.5;
+                red.dir = (rect.x + rect.w / 2 - WIDTH / 2) * 1.5;
                 #ifdef MX_DEV
                     printf("Red object\n");
                 #endif
@@ -523,7 +531,7 @@ void detectChannelGreen(void) {
                 greenObject = rect;
                 greensDetected = 1;
                 green.dis = 550 / rect.w;
-                green.dir = (rect.x + rect.w / 2 - WIDTH) * 1.5;
+                green.dir = (rect.x + rect.w / 2 - WIDTH / 2) * 1.5;
                 #ifdef MX_DEV
                     printf("Green object\n");
                 #endif
@@ -554,7 +562,7 @@ void detectChannelBlue(void) {
                 int hu = iy, wr = ix, hd = iy, wl = ix;
                 lookForBlueEdges(ix, iy, &hu, &wr, &hd, &wl);
                 #ifdef MX_DEV
-		//printf("Rect blue %d %d %d %d\n", hu, wr, hd, wl);
+                    //printf("Rect blue %d %d %d %d\n", hu, wr, hd, wl);
                 #endif
                 newRect.x = wl;
                 newRect.y = hu;
@@ -569,9 +577,9 @@ void detectChannelBlue(void) {
                 blueObject = rect;
                 bluesDetected = 1;
                 blue.dis = 550 / rect.w;
-                blue.dir = (rect.x + rect.w / 2 - WIDTH) * 1.5;
+                blue.dir = (rect.x + rect.w / 2 - WIDTH / 2) * 1.5;
                 #ifdef MX_DEV
-		    printf("Blue object\n");
+                    printf("Blue object\n");
                 #endif
             }
         }
@@ -603,7 +611,7 @@ void detectChannelBlue(void) {
         binaryFilter();
         granularityFilter();
         detectChannelRed();
-        detectChannelBlue();
+        //detectChannelBlue();
         //printf("Finishing see\n");
     }
 #else

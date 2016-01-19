@@ -11,6 +11,7 @@
 #define BLUE_THRESHOLD 30 // used for binary filter (0 - 255)
 #define MIN_WIDTH 0
 #define MIN_HEIGHT 0
+#define RATIO_THRESHOLD 1.1
 
 struct Object {
     int dis;
