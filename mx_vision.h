@@ -11,6 +11,7 @@
 #define BLUE_THRESHOLD 30 // used for binary filter (0 - 255)
 #define MIN_WIDTH 0
 #define MIN_HEIGHT 0
+#define MAX_OBJECTS 10
 #define RATIO_THRESHOLD 1.1
 
 struct Object {
@@ -21,12 +22,16 @@ struct Object {
 extern struct Object red;
 extern struct Object green;
 extern struct Object blue;
+
+extern struct Object reds[MAX_OBJECTS];
+
 extern int redsDetected;
 extern int greensDetected;
 extern int bluesDetected;
 
 void mx_vision_init(void);
 #ifdef MX_DEV
+    void mx_vision_set(unsigned char *image);
     void mx_vision_see(unsigned char *image);
 #else
     void mx_vision_see(void);

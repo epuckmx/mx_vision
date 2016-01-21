@@ -21,6 +21,8 @@ struct Rect redObject = (struct Rect) {0, 0, 0, 0};
 struct Rect greenObject = (struct Rect) {0, 0, 0, 0};
 struct Rect blueObject = (struct Rect) {0, 0, 0, 0};
 
+struct Object reds[MAX_OBJECTS];
+
 struct Object red;
 struct Object green;
 struct Object blue;
@@ -43,6 +45,11 @@ void getColorR(int x, int y, unsigned char *r) {
     *r = h & 0xF8;
 }
 
+void setColorR(int x, int y , unsigned char r) {
+    unsigned char h = buffer[2 * (WIDTH * y + x)];
+    buffer[2 * (WIDTH * y + x)] = (r & 0xF8) | (h & 0x07);
+}
+
 // G
 
 void getColorG(int x, int y, unsigned char *g) {
@@ -51,11 +58,23 @@ void getColorG(int x, int y, unsigned char *g) {
     *g = ((h & 0x07) << 5) | ((l & 0xE0) >> 3);
 }
 
+void setColorG(int x, int y, unsigned char g) {
+    unsigned char h = buffer[2 * (WIDTH * y + x)];
+    unsigned char l = buffer[2 * (WIDTH * y + x) + 1];
+    buffer[2 * (WIDTH * y + x)] = (h & 0xF8) | ((g >> 5));
+    buffer[2 * (WIDTH * y + x) + 1] = ((g << 3) & 0xE0) | (l & 0x1F);
+}
+
 // B
 
 void getColorB(int x, int y, unsigned char *b) {
     unsigned char l = buffer[2 * (WIDTH * y + x) + 1];
     *b = (l & 0x1F) << 3;
+}
+
+void setColorB(int x, int y, unsigned char b) {
+    unsigned char l = buffer[2 * (WIDTH * y + x) + 1];
+    buffer[2 * (WIDTH * y + x) + 1] = (l & 0xE0) | (b >> 3);
 }
 
 // RG
@@ -441,6 +460,19 @@ void lookForBlueEdges(int ix, int iy, int* hu, int* wr, int* hd, int* wl) {
     }
 }
 
+void clearRectRed(int x, int y, int h, int w) {
+    int i, j;
+    for (i = x; i < x + w; ++i) {
+        for (j = y; j < h; ++j) {
+            setColorR(i, j, 0);
+        }
+    }
+}
+
+void detectRedObjects() {
+
+}
+
 void detectChannelRed(void) {
     char objectDetected = 0;
     int iteration = 0;
@@ -461,9 +493,6 @@ void detectChannelRed(void) {
                 rect = newRect;
                 int hu = iy, wr = ix, hd = iy, wl = ix;
                 lookForRedEdges(ix, iy, &hu, &wr, &hd, &wl);
-                #ifdef MX_DEV
-                    //printf("Rect red %d %d %d %d\n", hu, wr, hd, wl);
-                #endif
                 newRect.x = wl;
                 newRect.y = hu;
                 newRect.w = wr - wl + 1;
@@ -486,9 +515,6 @@ void detectChannelRed(void) {
                 redsDetected = 1;
                 red.dis = 550 / rect.w;
                 red.dir = (rect.x + rect.w / 2 - WIDTH / 2) * 1.5;
-                #ifdef MX_DEV
-                    printf("Red object\n");
-                #endif
             }
         }
         iteration++;
@@ -515,9 +541,6 @@ void detectChannelGreen(void) {
                 rect = newRect;
                 int hu = iy, wr = ix, hd = iy, wl = ix;
                 lookForGreenEdges(ix, iy, &hu, &wr, &hd, &wl);
-                #ifdef MX_DEV
-                    printf("Rect green %d %d %d %d\n", hu, wr, hd, wl);
-                #endif
                 newRect.x = wl;
                 newRect.y = hu;
                 newRect.w = wr - wl + 1;
@@ -532,9 +555,6 @@ void detectChannelGreen(void) {
                 greensDetected = 1;
                 green.dis = 550 / rect.w;
                 green.dir = (rect.x + rect.w / 2 - WIDTH / 2) * 1.5;
-                #ifdef MX_DEV
-                    printf("Green object\n");
-                #endif
             }
         }
         iteration++;
@@ -561,9 +581,6 @@ void detectChannelBlue(void) {
                 rect = newRect;
                 int hu = iy, wr = ix, hd = iy, wl = ix;
                 lookForBlueEdges(ix, iy, &hu, &wr, &hd, &wl);
-                #ifdef MX_DEV
-                    //printf("Rect blue %d %d %d %d\n", hu, wr, hd, wl);
-                #endif
                 newRect.x = wl;
                 newRect.y = hu;
                 newRect.w = wr - wl + 1;
@@ -578,9 +595,6 @@ void detectChannelBlue(void) {
                 bluesDetected = 1;
                 blue.dis = 550 / rect.w;
                 blue.dir = (rect.x + rect.w / 2 - WIDTH / 2) * 1.5;
-                #ifdef MX_DEV
-                    printf("Blue object\n");
-                #endif
             }
         }
         iteration++;
@@ -601,8 +615,11 @@ void detectChannelBlue(void) {
 #endif
 
 #ifdef MX_DEV
+    void mx_vision_set(unsigned char *image) {
+        memcpy(buffer, image, BUFFER_SIZE);
+    }
+
     void mx_vision_see(unsigned char *image) {
-        //printf("Starting see\n");
         redsDetected = 0;
         greensDetected = 0;
         bluesDetected = 0;
@@ -611,8 +628,6 @@ void detectChannelBlue(void) {
         binaryFilter();
         granularityFilter();
         detectChannelRed();
-        //detectChannelBlue();
-        //printf("Finishing see\n");
     }
 #else
     void mx_vision_see(void) {
