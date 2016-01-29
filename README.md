@@ -4,8 +4,8 @@ Just make sure to NOT define MX_DEV when compiling the e-puck source code.  The 
 
 If you want to run the tests in a desktop just run
 
-    $ gcc -D MX_DEV -o test main.c mx_vision.c
-    $ ./test
+    $ gcc -D MX_DEV -o main main.c mx_vision.c
+    $ ./main
 
 ### Usage
 
@@ -22,11 +22,15 @@ Import ```mx_vision.h``` into your code. Call ```mx_vision_init()``` after ```e_
     		// redsDetected = number of red objects, available in red struct
     		// greensDetected = number of green objects, available in green struct
     		// bluesDetected = number of blue objects, available in blue struct
+            int i = 0;
+            for (i = 0; i < redsDetected; ++i) {
+                // reds[i] contains information about the i-th object
+            }
     	}
     	return 0;
     }
 
-Variables ```redsDetected```, ```greensDetected``` and ```bluesDetected``` contains respectively the amount of red, green and blue objects detected (up to 1 currently). You can access the distance and direction of the objects detected using the variables ```red```, ```green``` and ```blue``` which are of type Object:
+Variables ```redsDetected```, ```greensDetected``` and ```bluesDetected``` contains respectively the amount of red, green and blue objects detected. You can access the distance and direction of the objects detected using the variables ```reds```, ```greens``` and ```blues``` which are arrays of type Object structs:
 
     struct Object {
     	char dis; // absolute distance in cm
