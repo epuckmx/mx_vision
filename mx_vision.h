@@ -9,8 +9,8 @@
 #define RED_THRESHOLD 30 // used for binary filter (0 - 255)
 #define GREEN_THRESHOLD 30 // used for binary filter (0 - 255)
 #define BLUE_THRESHOLD 30 // used for binary filter (0 - 255)
-#define MIN_WIDTH 0
-#define MIN_HEIGHT 0
+#define MIN_WIDTH 3
+#define MIN_HEIGHT 3
 #define MAX_OBJECTS 10
 #define RATIO_THRESHOLD 1.1
 
@@ -31,6 +31,10 @@ extern int bluesDetected;
 
 void mx_vision_init(void);
 #ifdef MX_DEV
+    void getColorR(int x, int y, unsigned char *r);
+    void setColorR(int x, int y, unsigned char r);
+    void getColorG(int x, int y, unsigned char *g);
+    void getColorB(int x, int y, unsigned char *b);
     void mx_vision_set(unsigned char *image);
     void mx_vision_see(unsigned char *image);
 #else

@@ -460,17 +460,61 @@ void lookForBlueEdges(int ix, int iy, int* hu, int* wr, int* hd, int* wl) {
     }
 }
 
-void clearRectRed(int x, int y, int h, int w) {
+void clearRectRed(int x, int y, int w, int h) {
     int i, j;
     for (i = x; i < x + w; ++i) {
-        for (j = y; j < h; ++j) {
+        for (j = y; j < y + h; ++j) {
             setColorR(i, j, 0);
         }
     }
 }
 
 void detectRedObjects() {
-
+    redsDetected = 0;
+    int iteration = 0;
+    while (redsDetected < MAX_OBJECTS && iteration < PIXELS / 2) {
+        int index = rand() % PIXELS;
+        int ix = index % WIDTH;
+        int iy = index / WIDTH;
+        if (ix == 0 || ix == WIDTH - 1 || iy == 0 || iy == HEIGHT - 1) continue;
+        unsigned char r;
+        getColorR(ix, iy, &r);
+        if (r > 0) {
+            int area = 0;
+            int newArea = 1;
+            struct Rect rect = (struct Rect) {0, 0, 0, 0};
+            struct Rect newRect = (struct Rect) {0, 0, 1, 1};
+            while (newArea > area) {
+                area = newArea;
+                rect = newRect;
+                int hu = iy, wr = ix, hd = iy, wl = ix;
+                lookForRedEdges(ix, iy, &hu, &wr, &hd, &wl);
+                newRect.x = wl;
+                newRect.y = hu;
+                newRect.w = wr - wl + 1;
+                newRect.h = hd - hu + 1;
+                newArea = newRect.w * newRect.h;
+                ix = newRect.x + newRect.w / 2;
+                iy = newRect.y + newRect.h / 2;
+            }
+            if (rect.w >= MIN_WIDTH && rect.h >= MIN_HEIGHT) {
+                double ratio = (double)rect.w / rect.h;
+                if (ratio < RATIO_THRESHOLD) {
+                    int w = rect.w;
+                    rect.w = (int)(1.33 * rect.h);
+                    if (rect.x < WIDTH / 2) {
+                        rect.x -= (rect.w - w);
+                    }
+                }
+                reds[redsDetected].dis = 550 / rect.w;
+                reds[redsDetected].dir = (rect.x + rect.w / 2 - WIDTH / 2) * 1.5;
+                redsDetected++;
+                iteration = 0;
+                clearRectRed(rect.x, rect.y, rect.w, rect.h);
+            }
+        }
+        iteration++;
+    }
 }
 
 void detectChannelRed(void) {
@@ -620,27 +664,19 @@ void detectChannelBlue(void) {
     }
 
     void mx_vision_see(unsigned char *image) {
-        redsDetected = 0;
-        greensDetected = 0;
-        bluesDetected = 0;
         memcpy(buffer, image, BUFFER_SIZE);
         medianFilter();
         binaryFilter();
         granularityFilter();
-        detectChannelRed();
+        detectRedObjects();
     }
 #else
     void mx_vision_see(void) {
-        redsDetected = 0;
-        greensDetected = 0;
-        bluesDetected = 0;
         e_poxxxx_launch_capture(buffer);
         while (!e_poxxxx_is_img_ready());
         medianFilter();
         binaryFilter();
         granularityFilter();
-        detectChannelRed();
-        detectChannelGreen();
-        detectChannelBlue();
+        detectRedObjects();
     }
 #endif
