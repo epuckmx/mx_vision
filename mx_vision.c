@@ -22,6 +22,10 @@ struct Rect greenObject = (struct Rect) {0, 0, 0, 0};
 struct Rect blueObject = (struct Rect) {0, 0, 0, 0};
 
 struct Object reds[MAX_OBJECTS];
+struct Object blues[MAX_OBJECTS];
+
+struct Object redsPrev[MAX_OBJECTS];
+struct Object bluesPrev[MAX_OBJECTS];
 
 struct Object red;
 struct Object green;
@@ -30,6 +34,10 @@ struct Object blue;
 int redsDetected = 0;
 int greensDetected = 0;
 int bluesDetected = 0;
+
+int redsDetectedPrev = 0;
+int grensDetectedPrev = 0;
+int bluesDetectedPrev = 0;
 
 unsigned char backup_ra[HEIGHT];
 unsigned char backup_rb[HEIGHT];
@@ -189,7 +197,7 @@ void medianFilter(void) {
 }
 
 void binaryFilter(void) {
-    int i, j; 
+    int i, j;
     unsigned char r, g, b;
     for (i = 0; i < WIDTH; ++i) {
         for (j = 0; j < HEIGHT; ++j) {
@@ -218,7 +226,7 @@ void binaryFilter(void) {
 }
 
 void granularityFilter(void) {
-    int i, j; 
+    int i, j;
     unsigned char r, g, b, rs, gs, bs, rn, gn, bn;
     for (i = 0; i < WIDTH; ++i) {
         for (j = 0; j < HEIGHT; ++j) {
@@ -227,7 +235,7 @@ void granularityFilter(void) {
             backup_rb[j] = r;
             backup_bb[j] = b;
         }
-        for (j = 0; j < HEIGHT; ++j) {    
+        for (j = 0; j < HEIGHT; ++j) {
             if (i == 0 || i == WIDTH - 1 || j == 0 || j == HEIGHT - 1) {
                 setColorsRGB(i, j, 0, 0, 0);
                 continue;
@@ -469,6 +477,15 @@ void clearRectRed(int x, int y, int w, int h) {
     }
 }
 
+void clearRectBlue(int x, int y, int w, int h) {
+    int i, j;
+    for (i = x; i < x + w; ++i) {
+        for (j = y; j < y + h; ++j) {
+            setColorB(i, j, 0);
+        }
+    }
+}
+
 void detectRedObjects() {
     redsDetected = 0;
     int iteration = 0;
@@ -511,6 +528,54 @@ void detectRedObjects() {
                 redsDetected++;
                 iteration = 0;
                 clearRectRed(rect.x, rect.y, rect.w, rect.h);
+            }
+        }
+        iteration++;
+    }
+}
+
+void detectBlueObjects() {
+    bluesDetected = 0;
+    int iteration = 0;
+    while (bluesDetected < MAX_OBJECTS && iteration < PIXELS / 2) {
+        int index = rand() % PIXELS;
+        int ix = index % WIDTH;
+        int iy = index / WIDTH;
+        if (ix == 0 || ix == WIDTH - 1 || iy == 0 || iy == HEIGHT - 1) continue;
+        unsigned char b;
+        getColorB(ix, iy, &b);
+        if (b > 0) {
+            int area = 0;
+            int newArea = 1;
+            struct Rect rect = (struct Rect) {0, 0, 0, 0};
+            struct Rect newRect = (struct Rect) {0, 0, 1, 1};
+            while (newArea > area) {
+                area = newArea;
+                rect = newRect;
+                int hu = iy, wr = ix, hd = iy, wl = ix;
+                lookForBlueEdges(ix, iy, &hu, &wr, &hd, &wl);
+                newRect.x = wl;
+                newRect.y = hu;
+                newRect.w = wr - wl + 1;
+                newRect.h = hd - hu + 1;
+                newArea = newRect.w * newRect.h;
+                ix = newRect.x + newRect.w / 2;
+                iy = newRect.y + newRect.h / 2;
+            }
+            if (rect.w >= MIN_WIDTH && rect.h >= MIN_HEIGHT) {
+                double ratio = (double)rect.w / rect.h;
+                if (ratio < RATIO_THRESHOLD) {
+                    int w = rect.w;
+                    rect.w = (int)(1.33 * rect.h);
+                    if (rect.x < WIDTH / 2) {
+                        rect.x -= (rect.w - w);
+                    }
+                }
+                blues[redsDetected].dis = 550 / rect.w;
+                blues[redsDetected].dir = (rect.x + rect.w / 2 - WIDTH / 2) * 1.5;
+                bluesDetected++;
+                iteration = 0;
+                clearRectBlue(rect.x, rect.y, rect.w, rect.h);
             }
         }
         iteration++;
@@ -645,6 +710,20 @@ void detectChannelBlue(void) {
     }
 }
 
+void mx_vision_init_cycle() {
+    int i;
+    for (i = 0; i < redsDetected; ++i) {
+        redsPrev[i] = reds[i];
+    }
+    for (i = 0; i < bluesDetected; ++i) {
+        bluesPrev[i] = blues[i];
+    }
+    redsDetectedPrev = redsDetected;
+    bluesDetectedPrev = bluesDetected;
+    redsDetected = 0;
+    bluesDetected = 0;
+}
+
 #ifdef MX_DEV
     void mx_vision_init(void) {
         time_t s = time(0);
@@ -664,19 +743,23 @@ void detectChannelBlue(void) {
     }
 
     void mx_vision_see(unsigned char *image) {
+        mx_vision_init_cycle();
         memcpy(buffer, image, BUFFER_SIZE);
         medianFilter();
         binaryFilter();
         granularityFilter();
         detectRedObjects();
+        detectBlueObjects();
     }
 #else
     void mx_vision_see(void) {
+        mx_vision_init_cycle();
         e_poxxxx_launch_capture(buffer);
         while (!e_poxxxx_is_img_ready());
         medianFilter();
         binaryFilter();
         granularityFilter();
         detectRedObjects();
+        detectBlueObjects();
     }
 #endif
