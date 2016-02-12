@@ -27,6 +27,11 @@ struct Object blues[MAX_OBJECTS];
 struct Object redsPrev[MAX_OBJECTS];
 struct Object bluesPrev[MAX_OBJECTS];
 
+struct Object redsLeft[MAX_OBJECTS];
+struct Object redsRight[MAX_OBJECTS];
+// struct Object redsFar[MAX_OBJECTS];
+// struct Object redsNear[MAX_OBJECTS];
+
 struct Object red;
 struct Object green;
 struct Object blue;
@@ -710,10 +715,27 @@ void detectChannelBlue(void) {
     }
 }
 
+void predict() {
+    int c, l, r;
+    for (c = 0; c < redsDetected; ++c) {
+        for (l = 0; l < redsDetected; ++l) {
+            for (r = 0; r < redsDetected; ++r) {
+                Object center = redsPrev[c];
+                Object left = redsLeft[l];
+                
+            }
+        }
+    }
+}
+
 void mx_vision_init_cycle() {
     int i;
     for (i = 0; i < redsDetected; ++i) {
         redsPrev[i] = reds[i];
+        redsLeft[i] = reds[i];
+        redsLeft[i].dir -= DIR_DELTA;
+        redsRight[i] = reds[i];
+        redsRight[i].dir += DIR_DELTA;
     }
     for (i = 0; i < bluesDetected; ++i) {
         bluesPrev[i] = blues[i];

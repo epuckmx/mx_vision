@@ -13,6 +13,8 @@
 #define MIN_HEIGHT 3
 #define MAX_OBJECTS 10
 #define RATIO_THRESHOLD 1.1
+#define DIR_DELTA 3
+#define DIS_DELTA 3
 
 struct Object {
     int dis;
