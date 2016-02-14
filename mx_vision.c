@@ -576,8 +576,8 @@ void detectBlueObjects() {
                         rect.x -= (rect.w - w);
                     }
                 }
-                blues[redsDetected].dis = 550 / rect.w;
-                blues[redsDetected].dir = (rect.x + rect.w / 2 - WIDTH / 2) * 1.5;
+                blues[bluesDetected].dis = 550 / rect.w;
+                blues[bluesDetected].dir = (rect.x + rect.w / 2 - WIDTH / 2) * 1.5;
                 bluesDetected++;
                 iteration = 0;
                 clearRectBlue(rect.x, rect.y, rect.w, rect.h);
@@ -722,7 +722,7 @@ void predict() {
             for (r = 0; r < redsDetected; ++r) {
                 Object center = redsPrev[c];
                 Object left = redsLeft[l];
-                
+
             }
         }
     }
