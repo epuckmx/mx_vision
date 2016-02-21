@@ -4,12 +4,12 @@ Just make sure to NOT define MX_DEV when compiling the e-puck source code.  The 
 
 If you want to run the tests in a desktop just run
 
-    $ gcc -D MX_DEV -o main main.c mx_vision.c
+    $ gcc -D MX_DEV -o main main.cpp mx_vision.c
     $ ./main
 
 ### Usage
 
-Import ```mx_vision.h``` into your code. Call ```mx_vision_init()``` after ```e_init_port()```. Then, in your main loop call ```mx_vision_see()``` to perform a seach using the data received in the camera. Example:
+Import ```mx_vision.h``` into your code. Call ```mx_vision_init()``` after ```e_init_port()```. Then, in your main loop call ```mx_vision_see()``` to perform a search using the data received in the camera. Example:
 
     #include "e_init_port.h"
     #include "mx_vision.h"
@@ -34,7 +34,7 @@ Variables ```redsDetected```, ```greensDetected``` and ```bluesDetected``` conta
 
     struct Object {
     	char dis; // absolute distance in cm
-    	char dir; // relative direction in sexageximal degrees using left hand rule
+    	char dir; // relative direction in sexagesimal degrees using left hand rule
     };
 
 Refer to ```mx_vision.h``` for more information.

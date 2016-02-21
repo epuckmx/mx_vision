@@ -17,20 +17,8 @@ struct Rect {
     int h;
 };
 
-struct Rect redObject = (struct Rect) {0, 0, 0, 0};
-struct Rect greenObject = (struct Rect) {0, 0, 0, 0};
-struct Rect blueObject = (struct Rect) {0, 0, 0, 0};
-
 struct Object reds[MAX_OBJECTS];
 struct Object blues[MAX_OBJECTS];
-
-struct Object redsPrev[MAX_OBJECTS];
-struct Object bluesPrev[MAX_OBJECTS];
-
-struct Object redsLeft[MAX_OBJECTS];
-struct Object redsRight[MAX_OBJECTS];
-// struct Object redsFar[MAX_OBJECTS];
-// struct Object redsNear[MAX_OBJECTS];
 
 struct Object red;
 struct Object green;
@@ -39,10 +27,6 @@ struct Object blue;
 int redsDetected = 0;
 int greensDetected = 0;
 int bluesDetected = 0;
-
-int redsDetectedPrev = 0;
-int grensDetectedPrev = 0;
-int bluesDetectedPrev = 0;
 
 unsigned char backup_ra[HEIGHT];
 unsigned char backup_rb[HEIGHT];
@@ -587,161 +571,7 @@ void detectBlueObjects() {
     }
 }
 
-void detectChannelRed(void) {
-    char objectDetected = 0;
-    int iteration = 0;
-    while (objectDetected == 0 && iteration < PIXELS / 2) {
-        int index = rand() % PIXELS;
-        int ix = index % WIDTH;
-        int iy = index / WIDTH;
-        if (ix == 0 || ix == WIDTH - 1 || iy == 0 || iy == HEIGHT - 1) continue;
-        unsigned char r;
-        getColorR(ix, iy, &r);
-        if (r > 0) {
-            int area = 0;
-            int newArea = 1;
-            struct Rect rect = (struct Rect) {0, 0, 0, 0};
-            struct Rect newRect = (struct Rect) {0, 0, 1, 1};
-            while (newArea > area) {
-                area = newArea;
-                rect = newRect;
-                int hu = iy, wr = ix, hd = iy, wl = ix;
-                lookForRedEdges(ix, iy, &hu, &wr, &hd, &wl);
-                newRect.x = wl;
-                newRect.y = hu;
-                newRect.w = wr - wl + 1;
-                newRect.h = hd - hu + 1;
-                newArea = newRect.w * newRect.h;
-                ix = newRect.x + newRect.w / 2;
-                iy = newRect.y + newRect.h / 2;
-            }
-            if (rect.w >= MIN_WIDTH && rect.h >= MIN_HEIGHT) {
-                objectDetected = 1;
-                double ratio = (double)rect.w / rect.h;
-                if (ratio < RATIO_THRESHOLD) {
-                    int w = rect.w;
-                    rect.w = (int)(1.33 * rect.h);
-                    if (rect.x < WIDTH / 2) {
-                        rect.x -= (rect.w - w);
-                    }
-                }
-                redObject = rect;
-                redsDetected = 1;
-                red.dis = 550 / rect.w;
-                red.dir = (rect.x + rect.w / 2 - WIDTH / 2) * 1.5;
-            }
-        }
-        iteration++;
-    }
-}
-
-void detectChannelGreen(void) {
-    char objectDetected = 0;
-    int iteration = 0;
-    while (objectDetected == 0 && iteration < PIXELS / 2) {
-        int index = rand() % PIXELS;
-        int ix = index % WIDTH;
-        int iy = index / WIDTH;
-        if (ix == 0 || ix == WIDTH - 1 || iy == 0 || iy == HEIGHT - 1) continue;
-        unsigned char g;
-        getColorG(ix, iy, &g);
-        if (g > 0) {
-            int area = 0;
-            int newArea = 1;
-            struct Rect rect = (struct Rect) {0, 0, 0, 0};
-            struct Rect newRect = (struct Rect) {0, 0, 1, 1};
-            while (newArea > area) {
-                area = newArea;
-                rect = newRect;
-                int hu = iy, wr = ix, hd = iy, wl = ix;
-                lookForGreenEdges(ix, iy, &hu, &wr, &hd, &wl);
-                newRect.x = wl;
-                newRect.y = hu;
-                newRect.w = wr - wl + 1;
-                newRect.h = hd - hu + 1;
-                newArea = newRect.w * newRect.h;
-                ix = newRect.x + newRect.w / 2;
-                iy = newRect.y + newRect.h / 2;
-            }
-            if (rect.w >= MIN_WIDTH && rect.h >= MIN_HEIGHT) {
-                objectDetected = 1;
-                greenObject = rect;
-                greensDetected = 1;
-                green.dis = 550 / rect.w;
-                green.dir = (rect.x + rect.w / 2 - WIDTH / 2) * 1.5;
-            }
-        }
-        iteration++;
-    }
-}
-
-void detectChannelBlue(void) {
-    char objectDetected = 0;
-    int iteration = 0;
-    while (objectDetected == 0 && iteration < PIXELS / 2) {
-        int index = rand() % PIXELS;
-        int ix = index % WIDTH;
-        int iy = index / WIDTH;
-        if (ix == 0 || ix == WIDTH - 1 || iy == 0 || iy == HEIGHT - 1) continue;
-        unsigned char b;
-        getColorB(ix, iy, &b);
-        if (b > 0) {
-            int area = 0;
-            int newArea = 1;
-            struct Rect rect = (struct Rect) {0, 0, 0, 0};
-            struct Rect newRect = (struct Rect) {0, 0, 1, 1};
-            while (newArea > area) {
-                area = newArea;
-                rect = newRect;
-                int hu = iy, wr = ix, hd = iy, wl = ix;
-                lookForBlueEdges(ix, iy, &hu, &wr, &hd, &wl);
-                newRect.x = wl;
-                newRect.y = hu;
-                newRect.w = wr - wl + 1;
-                newRect.h = hd - hu + 1;
-                newArea = newRect.w * newRect.h;
-                ix = newRect.x + newRect.w / 2;
-                iy = newRect.y + newRect.h / 2;
-            }
-            if (rect.w >= MIN_WIDTH && rect.h >= MIN_HEIGHT) {
-                objectDetected = 1;
-                blueObject = rect;
-                bluesDetected = 1;
-                blue.dis = 550 / rect.w;
-                blue.dir = (rect.x + rect.w / 2 - WIDTH / 2) * 1.5;
-            }
-        }
-        iteration++;
-    }
-}
-
-void predict() {
-    int c, l, r;
-    for (c = 0; c < redsDetected; ++c) {
-        for (l = 0; l < redsDetected; ++l) {
-            for (r = 0; r < redsDetected; ++r) {
-                Object center = redsPrev[c];
-                Object left = redsLeft[l];
-
-            }
-        }
-    }
-}
-
 void mx_vision_init_cycle() {
-    int i;
-    for (i = 0; i < redsDetected; ++i) {
-        redsPrev[i] = reds[i];
-        redsLeft[i] = reds[i];
-        redsLeft[i].dir -= DIR_DELTA;
-        redsRight[i] = reds[i];
-        redsRight[i].dir += DIR_DELTA;
-    }
-    for (i = 0; i < bluesDetected; ++i) {
-        bluesPrev[i] = blues[i];
-    }
-    redsDetectedPrev = redsDetected;
-    bluesDetectedPrev = bluesDetected;
     redsDetected = 0;
     bluesDetected = 0;
 }
@@ -751,15 +581,7 @@ void mx_vision_init_cycle() {
         time_t s = time(0);
         srand((unsigned)s);
     }
-#else
-    void mx_vision_init(void) {
-        e_poxxxx_init_cam();
-        e_poxxxx_config_cam(0, 160, WIDTH * ZOOM, HEIGHT * ZOOM, ZOOM, ZOOM, RGB_565_MODE);
-        e_poxxxx_write_cam_registers();
-    }
-#endif
 
-#ifdef MX_DEV
     void mx_vision_set(unsigned char *image) {
         memcpy(buffer, image, BUFFER_SIZE);
     }
@@ -774,6 +596,12 @@ void mx_vision_init_cycle() {
         detectBlueObjects();
     }
 #else
+    void mx_vision_init(void) {
+        e_poxxxx_init_cam();
+        e_poxxxx_config_cam(0, 160, WIDTH * ZOOM, HEIGHT * ZOOM, ZOOM, ZOOM, RGB_565_MODE);
+        e_poxxxx_write_cam_registers();
+    }
+
     void mx_vision_see(void) {
         mx_vision_init_cycle();
         e_poxxxx_launch_capture(buffer);

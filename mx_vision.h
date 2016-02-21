@@ -21,10 +21,6 @@ struct Object {
     int dir;
 };
 
-extern struct Object red;
-extern struct Object green;
-extern struct Object blue;
-
 extern struct Object reds[MAX_OBJECTS];
 extern struct Object blues[MAX_OBJECTS];
 
@@ -34,13 +30,8 @@ extern int bluesDetected;
 
 void mx_vision_init(void);
 #ifdef MX_DEV
-    void getColorR(int x, int y, unsigned char *r);
-    void setColorR(int x, int y, unsigned char r);
-    void getColorG(int x, int y, unsigned char *g);
-    void getColorB(int x, int y, unsigned char *b);
-    void mx_vision_init_cycle(void);
-    void mx_vision_set(unsigned char *image);
-    void mx_vision_see(unsigned char *image);
+    void mx_vision_set(unsigned char *);
+    void mx_vision_see(unsigned char *);
 #else
     void mx_vision_see(void);
 #endif
