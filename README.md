@@ -4,7 +4,7 @@ Just make sure to NOT define MX_DEV when compiling the e-puck source code.  The 
 
 If you want to run the tests in a desktop just run
 
-    $ gcc -D MX_DEV -o main main.cpp mx_vision.c
+    $ g++ -D MX_DEV -o main main.cpp mx_vision.c
     $ ./main
 
 ### Usage
