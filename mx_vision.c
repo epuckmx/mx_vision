@@ -28,6 +28,10 @@ int redsDetected = 0;
 int greensDetected = 0;
 int bluesDetected = 0;
 
+struct Object redsPrediction[4][MAX_OBJECTS];
+unsigned char fits[256];
+unsigned char permutation = 0;
+
 unsigned char backup_ra[HEIGHT];
 unsigned char backup_rb[HEIGHT];
 unsigned char backup_ga[HEIGHT];
@@ -514,6 +518,8 @@ void detectRedObjects() {
                 }
                 reds[redsDetected].dis = 550 / rect.w;
                 reds[redsDetected].dir = (rect.x + rect.w / 2 - WIDTH / 2) * 1.5;
+		reds[redsDetected].w = rect.w;
+		reds[redsDetected].h = rect.h;
                 redsDetected++;
                 iteration = 0;
                 clearRectRed(rect.x, rect.y, rect.w, rect.h);
@@ -562,6 +568,8 @@ void detectBlueObjects() {
                 }
                 blues[bluesDetected].dis = 550 / rect.w;
                 blues[bluesDetected].dir = (rect.x + rect.w / 2 - WIDTH / 2) * 1.5;
+		blues[bluesDetected].w = rect.w;
+		blues[bluesDetected].h = rect.h;
                 bluesDetected++;
                 iteration = 0;
                 clearRectBlue(rect.x, rect.y, rect.w, rect.h);
@@ -572,8 +580,33 @@ void detectBlueObjects() {
 }
 
 void mx_vision_init_cycle() {
+    int i;
+    for (i = 0; i < 256; i++) {
+        fits[i] = 0;
+    }
+    for (i = 0; i < redsDetected; i++) {
+        redsPrediction[0][i] = reds[i];
+        redsPrediction[1][i] = reds[i];
+        redsPrediction[1][i].dir -= DIR_DELTA;
+        redsPrediction[2][i] = reds[i];
+        redsPrediction[2][i].dir += DIR_DELTA;
+    }
     redsDetected = 0;
     bluesDetected = 0;
+}
+
+void mx_vision_after_cycle() {
+    int i = 0;
+    for (i = 0; i < 256; i++) {
+        int object0 = i & 3;
+	int object1 = (i & 12) >> 2;
+	int object2 = (i & 48) >> 4;
+	int object3 = (i & 192) >> 6;
+	int newFit = 0;
+	// compute fit
+	fit[i] = newFit;
+    }
+    // take decision
 }
 
 #ifdef MX_DEV

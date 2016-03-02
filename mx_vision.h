@@ -11,7 +11,7 @@
 #define BLUE_THRESHOLD 30 // used for binary filter (0 - 255)
 #define MIN_WIDTH 3
 #define MIN_HEIGHT 3
-#define MAX_OBJECTS 10
+#define MAX_OBJECTS 4
 #define RATIO_THRESHOLD 1.1
 #define DIR_DELTA 3
 #define DIS_DELTA 3
@@ -19,10 +19,13 @@
 struct Object {
     int dis;
     int dir;
+    int w;
+    int h;
 };
 
 extern struct Object reds[MAX_OBJECTS];
 extern struct Object blues[MAX_OBJECTS];
+extern struct Object greens[MAX_OBJECTS];
 
 extern int redsDetected;
 extern int greensDetected;
