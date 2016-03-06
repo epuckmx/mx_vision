@@ -15,6 +15,9 @@
 #define RATIO_THRESHOLD 1.1
 #define DIR_DELTA 3
 #define DIS_DELTA 3
+#define SINGLE 0
+#define MULTIPLE 1
+#define BLUE_MODE SINGLE
 
 struct Object {
     int dis;

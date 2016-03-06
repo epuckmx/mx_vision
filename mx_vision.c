@@ -571,6 +571,26 @@ void detectBlueObjects() {
     }
 }
 
+void getMaxBlueObject() {
+    if (BLUE_MODE == SINGLE) {
+        if (bluesDetected > 1) {
+            int min = 0;
+            int dist = blues[0].dis;
+            int i = 0;
+            for (i = 0; i < bluesDetected; ++i) {
+                if (blues[i].dis < dist) {
+                    min = i;
+                    dist = blues[i].dis;
+                }
+            }
+            if (min != 0) {
+                blues[0] = blues[min];
+            }
+            bluesDetected = 1;
+        }
+    }
+}
+
 void mx_vision_init_cycle() {
     redsDetected = 0;
     bluesDetected = 0;
@@ -594,6 +614,7 @@ void mx_vision_init_cycle() {
         granularityFilter();
         detectRedObjects();
         detectBlueObjects();
+        getMaxBlueObject();
     }
 #else
     void mx_vision_init(void) {
@@ -611,5 +632,6 @@ void mx_vision_init_cycle() {
         granularityFilter();
         detectRedObjects();
         detectBlueObjects();
+        getMaxBlueObject();
     }
 #endif
