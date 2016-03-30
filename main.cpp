@@ -6,7 +6,7 @@ unsigned char image[BUFFER_SIZE];
 
 int main() {
     mx_vision_init();
-    std::ifstream file("record3");
+    std::ifstream file("record2");
     int byte = 0;
     int counter = 0;
     while (file >> byte) {

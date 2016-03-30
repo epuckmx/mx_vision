@@ -22,6 +22,8 @@
 struct Object {
     int dis;
     int dir;
+    int x;
+    int y;
     int w;
     int h;
 };

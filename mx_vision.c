@@ -28,9 +28,10 @@ int redsDetected = 0;
 int greensDetected = 0;
 int bluesDetected = 0;
 
+int prevRedsDetected = 0;
+int prevBluesDetected = 0;
+
 struct Object redsPrediction[4][MAX_OBJECTS];
-unsigned char fits[256];
-unsigned char permutation = 0;
 
 unsigned char backup_ra[HEIGHT];
 unsigned char backup_rb[HEIGHT];
@@ -38,6 +39,24 @@ unsigned char backup_ga[HEIGHT];
 unsigned char backup_gb[HEIGHT];
 unsigned char backup_ba[HEIGHT];
 unsigned char backup_bb[HEIGHT];
+
+// utils
+
+int max(int a, int b) {
+    if (a > b) {
+        return a;
+    } else {
+        return b;
+    }
+}
+
+int min(int a, int b) {
+    if (a < b) {
+        return a;
+    } else {
+        return b;
+    }
+}
 
 // R
 
@@ -356,7 +375,7 @@ void lookForGreenEdges(int ix, int iy, int* hu, int* wr, int* hd, int* wl) {
     while (gr > 0) {
         (*wr)++;
         if (*wr < WIDTH - 1) {
-	  getColorG(*wr, iy, &gr);
+            getColorG(*wr, iy, &gr);
             if (gr == 0) {
                 (*wr)--;
                 break;
@@ -518,8 +537,9 @@ void detectRedObjects() {
                 }
                 reds[redsDetected].dis = 550 / rect.w;
                 reds[redsDetected].dir = (rect.x + rect.w / 2 - WIDTH / 2) * 1.5;
-		reds[redsDetected].w = rect.w;
-		reds[redsDetected].h = rect.h;
+                reds[redsDetected].x = rect.x;
+                reds[redsDetected].w = rect.w;
+                reds[redsDetected].h = rect.h;
                 redsDetected++;
                 iteration = 0;
                 clearRectRed(rect.x, rect.y, rect.w, rect.h);
@@ -568,8 +588,10 @@ void detectBlueObjects() {
                 }
                 blues[bluesDetected].dis = 550 / rect.w;
                 blues[bluesDetected].dir = (rect.x + rect.w / 2 - WIDTH / 2) * 1.5;
-		blues[bluesDetected].w = rect.w;
-		blues[bluesDetected].h = rect.h;
+                blues[bluesDetected].x = rect.x;
+                blues[bluesDetected].y = rect.y;
+                blues[bluesDetected].w = rect.w;
+                blues[bluesDetected].h = rect.h;
                 bluesDetected++;
                 iteration = 0;
                 clearRectBlue(rect.x, rect.y, rect.w, rect.h);
@@ -601,31 +623,68 @@ void getMaxBlueObject() {
 
 void mx_vision_init_cycle() {
     int i;
-    for (i = 0; i < 256; i++) {
+    /*for (i = 0; i < 256; i++) {
         fits[i] = 0;
-    }
+    }*/
     for (i = 0; i < redsDetected; i++) {
-        redsPrediction[0][i] = reds[i];
+        redsPrediction[0][i] = reds[i]; // no movement
         redsPrediction[1][i] = reds[i];
-        redsPrediction[1][i].dir -= DIR_DELTA;
+        redsPrediction[1][i].dir -= DIR_DELTA; // to the left
+        redsPrediction[1][i].x -= DIR_DELTA;
         redsPrediction[2][i] = reds[i];
-        redsPrediction[2][i].dir += DIR_DELTA;
+        redsPrediction[2][i].dir += DIR_DELTA; // to the right
+        redsPrediction[2][i].x += DIR_DELTA;
+        redsPrediction[3][i] = reds[i];
+        redsPrediction[3][i].dis += DIS_DELTA; // moving far
     }
+    prevRedsDetected = redsDetected;
+    prevBluesDetected = bluesDetected;
     redsDetected = 0;
     bluesDetected = 0;
 }
 
-void mx_vision_after_cycle() {
-    int i = 0;
-    for (i = 0; i < 256; i++) {
-        int object0 = i & 3;
-	int object1 = (i & 12) >> 2;
-	int object2 = (i & 48) >> 4;
-	int object3 = (i & 192) >> 6;
-	int newFit = 0;
-	// compute fit
-	fit[i] = newFit;
+// from is the prev Object
+// to is the new Object
+// return a percentage of "to" into "from"
+int computeArea(struct Object from, struct Object to) {
+    int left = max(from.x, to.x);
+    int right = min(from.x + from.w, to.x + to.w);
+    int top = max(from.y, to.y);
+    int bottom = min(from.y + from.h, to.y + to.h);
+    if (left < right && top < bottom) {
+        int toArea = 100 * to.w * to.h;
+        int intersection = (right - left) * (bottom - top);
+        return toArea / intersection;
+    } else {
+        return 0;
     }
+}
+
+void mx_vision_after_cycle() {
+    int i = 0, j, k;
+    int objects[4];
+    int maxFit = 0, maxIndex = 0;
+    for (i = 0; i < 256; i++) {
+        // compute fit for this setup
+        objects[0] = i & 3;
+        objects[1] = (i & 12) >> 2;
+        objects[2] = (i & 48) >> 4;
+        objects[3] = (i & 192) >> 6;
+        int newFit = 0;
+        for (j = 0; j < prevRedsDetected; j++) {
+            for (k = 0; k < redsDetected; k++) {
+                int fit = computeArea(redsPrediction[objects[j]][j], reds[k]);
+                newFit = newFit + fit;
+            }
+        }
+        //printf("Fit %d at setup %d\n", newFit, i);
+        //fit[i] = newFit;
+        if (newFit > maxFit) {
+            maxFit = newFit;
+            maxIndex = i;
+        }
+    }
+    printf("Max fit %d at index %d\n", maxFit, maxIndex);
     // take decision
 }
 
@@ -648,6 +707,7 @@ void mx_vision_after_cycle() {
         detectRedObjects();
         detectBlueObjects();
         getMaxBlueObject();
+        mx_vision_after_cycle();
     }
 #else
     void mx_vision_init(void) {
@@ -666,5 +726,6 @@ void mx_vision_after_cycle() {
         detectRedObjects();
         detectBlueObjects();
         getMaxBlueObject();
+        mx_vision_after_cycle();
     }
 #endif
