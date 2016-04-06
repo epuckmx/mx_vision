@@ -31,7 +31,20 @@ int bluesDetected = 0;
 int prevRedsDetected = 0;
 int prevBluesDetected = 0;
 
-struct Object redsPrediction[4][MAX_OBJECTS];
+struct Object redsPrediction[8][MAX_OBJECTS];
+
+int fits[8192];
+
+int id = 0;
+
+int nextId() {
+    if (id < MAX_ID) {
+        id++;
+    } else {
+        id = 0;
+    }
+    return id;
+}
 
 unsigned char backup_ra[HEIGHT];
 unsigned char backup_rb[HEIGHT];
@@ -540,6 +553,7 @@ void detectRedObjects() {
                 reds[redsDetected].x = rect.x;
                 reds[redsDetected].w = rect.w;
                 reds[redsDetected].h = rect.h;
+                reds[redsDetected].id = nextId();
                 redsDetected++;
                 iteration = 0;
                 clearRectRed(rect.x, rect.y, rect.w, rect.h);
@@ -592,6 +606,7 @@ void detectBlueObjects() {
                 blues[bluesDetected].y = rect.y;
                 blues[bluesDetected].w = rect.w;
                 blues[bluesDetected].h = rect.h;
+                blues[bluesDetected].id = nextId();
                 bluesDetected++;
                 iteration = 0;
                 clearRectBlue(rect.x, rect.y, rect.w, rect.h);
@@ -623,19 +638,38 @@ void getMaxBlueObject() {
 
 void mx_vision_init_cycle() {
     int i;
-    /*for (i = 0; i < 256; i++) {
+    for (i = 0; i < 256; i++) {
         fits[i] = 0;
-    }*/
+    }
     for (i = 0; i < redsDetected; i++) {
-        redsPrediction[0][i] = reds[i]; // no movement
+        // no movement
+        redsPrediction[0][i] = reds[i];
+        // to the left
         redsPrediction[1][i] = reds[i];
-        redsPrediction[1][i].dir -= DIR_DELTA; // to the left
+        redsPrediction[1][i].dir -= DIR_DELTA;
         redsPrediction[1][i].x -= DIR_DELTA;
+        // to the right
         redsPrediction[2][i] = reds[i];
-        redsPrediction[2][i].dir += DIR_DELTA; // to the right
+        redsPrediction[2][i].dir += DIR_DELTA;
         redsPrediction[2][i].x += DIR_DELTA;
+        // moving far
         redsPrediction[3][i] = reds[i];
-        redsPrediction[3][i].dis += DIS_DELTA; // moving far
+        redsPrediction[3][i].x += DIS_DELTA;
+        redsPrediction[3][i].y += DIS_DELTA;
+        redsPrediction[3][i].w -= DIS_DELTA;
+        redsPrediction[3][i].h -= DIS_DELTA;
+        redsPrediction[3][i].dis = 550 / redsPrediction[3][i].w;
+        // moving near
+        redsPrediction[4][i] = reds[i];
+        redsPrediction[4][i].x -= DIS_DELTA;
+        redsPrediction[4][i].y -= DIS_DELTA;
+        redsPrediction[4][i].w += DIS_DELTA;
+        redsPrediction[4][i].h += DIS_DELTA;
+        redsPrediction[4][i].dis = 550 / redsPrediction[4][i].w;
+        // others
+        redsPrediction[5][i] = reds[i];
+        redsPrediction[6][i] = reds[i];
+        redsPrediction[7][i] = reds[i];
     }
     prevRedsDetected = redsDetected;
     prevBluesDetected = bluesDetected;
@@ -652,9 +686,9 @@ int computeArea(struct Object from, struct Object to) {
     int top = max(from.y, to.y);
     int bottom = min(from.y + from.h, to.y + to.h);
     if (left < right && top < bottom) {
-        int toArea = 100 * to.w * to.h;
-        int intersection = (right - left) * (bottom - top);
-        return toArea / intersection;
+        int toArea = to.w * to.h;
+        int intersection = 100 * (right - left) * (bottom - top);
+        return intersection / toArea;
     } else {
         return 0;
     }
@@ -662,30 +696,47 @@ int computeArea(struct Object from, struct Object to) {
 
 void mx_vision_after_cycle() {
     int i = 0, j, k;
-    int objects[4];
+    int objects[8];
     int maxFit = 0, maxIndex = 0;
-    for (i = 0; i < 256; i++) {
+    for (i = 0; i < 8192; i++) {
         // compute fit for this setup
-        objects[0] = i & 3;
-        objects[1] = (i & 12) >> 2;
-        objects[2] = (i & 48) >> 4;
-        objects[3] = (i & 192) >> 6;
+        objects[0] = i & 7;
+        objects[1] = (i & 56) >> 3;
+        objects[2] = (i & 448) >> 6;
+        objects[3] = (i & 3584) >> 9;
         int newFit = 0;
+        int intersections = 0;
         for (j = 0; j < prevRedsDetected; j++) {
             for (k = 0; k < redsDetected; k++) {
                 int fit = computeArea(redsPrediction[objects[j]][j], reds[k]);
-                newFit = newFit + fit;
+                if (fit > 0) {
+                    intersections++;
+                    newFit = newFit + fit;
+                }
             }
         }
-        //printf("Fit %d at setup %d\n", newFit, i);
-        //fit[i] = newFit;
+        if (intersections > 0) {
+            newFit = newFit / intersections;
+        }
         if (newFit > maxFit) {
             maxFit = newFit;
             maxIndex = i;
         }
+        fits[i] = newFit;
     }
     printf("Max fit %d at index %d\n", maxFit, maxIndex);
     // take decision
+    if (maxFit > ACCEPTANCE) {
+        redsDetected = prevRedsDetected;
+        i = maxIndex;
+        objects[0] = i & 3;
+        objects[1] = (i & 12) >> 2;
+        objects[2] = (i & 48) >> 4;
+        objects[3] = (i & 192) >> 6;
+        for (i = 0; i < prevRedsDetected; i++) {
+            reds[i] = redsPrediction[objects[i]][i];
+        }
+    }
 }
 
 #ifdef MX_DEV

@@ -13,11 +13,13 @@
 #define MIN_HEIGHT 3
 #define MAX_OBJECTS 4
 #define RATIO_THRESHOLD 1.1
-#define DIR_DELTA 3
-#define DIS_DELTA 3
+#define DIR_DELTA 2
+#define DIS_DELTA 1
 #define SINGLE 0
 #define MULTIPLE 1
 #define BLUE_MODE SINGLE
+#define ACCEPTANCE 50
+#define MAX_ID 32768
 
 struct Object {
     int dis;
@@ -26,6 +28,7 @@ struct Object {
     int y;
     int w;
     int h;
+    int id;
 };
 
 extern struct Object reds[MAX_OBJECTS];
