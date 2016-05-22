@@ -1,11 +1,12 @@
 #include <iostream>
 #include <fstream>
+#include "empirical.hpp"
 #include "mx_vision.h"
 
 unsigned char image[BUFFER_SIZE];
 
 int main() {
-    mx_vision_init();
+    /*mx_vision_init();
     std::ifstream file("record2");
     int byte = 0;
     int counter = 0;
@@ -27,6 +28,7 @@ int main() {
             std::cout << std::endl;
         }
     }
-    file.close();
+    file.close();*/
+    Empirical::post("test");
     return 0;
 }
