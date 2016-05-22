@@ -13,7 +13,7 @@
 #define MIN_HEIGHT 3
 #define MAX_OBJECTS 4
 #define RATIO_THRESHOLD 1.1
-#define DIR_DELTA 2
+#define DIR_DELTA 1
 #define DIS_DELTA 1
 #define SINGLE 0
 #define MULTIPLE 1
@@ -41,6 +41,7 @@ extern int bluesDetected;
 
 void mx_vision_init(void);
 #ifdef MX_DEV
+    void mx_vision_reset(void);
     void mx_vision_set(unsigned char *);
     void mx_vision_see(unsigned char *);
 #else

@@ -638,7 +638,7 @@ void getMaxBlueObject() {
 
 void mx_vision_init_cycle() {
     int i;
-    for (i = 0; i < 256; i++) {
+    for (i = 0; i < 8192; i++) {
         fits[i] = 0;
     }
     for (i = 0; i < redsDetected; i++) {
@@ -666,9 +666,15 @@ void mx_vision_init_cycle() {
         redsPrediction[4][i].w += DIS_DELTA;
         redsPrediction[4][i].h += DIS_DELTA;
         redsPrediction[4][i].dis = 550 / redsPrediction[4][i].w;
-        // others
+        // 2x left
         redsPrediction[5][i] = reds[i];
+        redsPrediction[5][i].dir -= 2 * DIR_DELTA;
+        redsPrediction[5][i].x -= 2 * DIR_DELTA;
+        // 2x right
         redsPrediction[6][i] = reds[i];
+        redsPrediction[6][i].dir += 2 * DIR_DELTA;
+        redsPrediction[6][i].x += 2 * DIR_DELTA;
+        // other
         redsPrediction[7][i] = reds[i];
     }
     prevRedsDetected = redsDetected;
@@ -679,7 +685,7 @@ void mx_vision_init_cycle() {
 
 // from is the prev Object
 // to is the new Object
-// return a percentage of "to" into "from"
+// return a percentage of "from" into "to"
 int computeArea(struct Object from, struct Object to) {
     int left = max(from.x, to.x);
     int right = min(from.x + from.w, to.x + to.w);
@@ -724,7 +730,7 @@ void mx_vision_after_cycle() {
         }
         fits[i] = newFit;
     }
-    printf("Max fit %d at index %d\n", maxFit, maxIndex);
+    //printf("Max fit %d at index %d\n", maxFit, maxIndex);
     // take decision
     if (maxFit > ACCEPTANCE) {
         redsDetected = prevRedsDetected;
@@ -743,6 +749,11 @@ void mx_vision_after_cycle() {
     void mx_vision_init(void) {
         time_t s = time(0);
         srand((unsigned)s);
+    }
+
+    void mx_vision_reset(void) {
+        redsDetected = 0;
+        bluesDetected = 0;
     }
 
     void mx_vision_set(unsigned char *image) {
