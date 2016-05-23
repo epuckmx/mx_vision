@@ -5,7 +5,7 @@
 
 namespace Empirical {
 
-int post(std::string message);
+void post(std::string message);
 
 } // namespace Empirical
 

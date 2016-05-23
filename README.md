@@ -38,3 +38,13 @@ Variables ```redsDetected```, ```greensDetected``` and ```bluesDetected``` conta
     };
 
 Refer to ```mx_vision.h``` for more information.
+
+### Docker
+
+Run
+
+    docker build -t mxvision .
+
+to build and
+
+    docker run -it --rm --name mxvision-app mxvision

@@ -1,9 +1,9 @@
 #include <iostream>
 #include <fstream>
 #include "empirical.hpp"
-#include "mx_vision.h"
+//#include "mx_vision.h"
 
-unsigned char image[BUFFER_SIZE];
+//unsigned char image[BUFFER_SIZE];
 
 int main() {
     /*mx_vision_init();
@@ -29,6 +29,6 @@ int main() {
         }
     }
     file.close();*/
-    Empirical::post("test");
+    Empirical::post("www.google.com");
     return 0;
 }
