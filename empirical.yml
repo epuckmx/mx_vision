@@ -1,5 +1,5 @@
 experiments:
-  mxvision:
+  mx_vision:
     type: standalone
     environment:
       build: .
