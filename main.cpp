@@ -14,7 +14,7 @@ int main() {
     int my_reds = 0;
     mx_vision_init();
     for (int i = 0; i < 3; i++) {
-        std::ifstream file(files[i]);
+        std::ifstream file(files[i].c_str());
         int byte = 0;
         int counter = 0;
         while (file >> byte) {
