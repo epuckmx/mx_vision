@@ -16,6 +16,7 @@ int main() {
     for (int i = 0; i < 3; i++) {
         std::ifstream file(files[i].c_str());
         if (file.is_open()) {
+            std::cout << "Processing file " << files[i] << std::endl;
             int byte = 0;
             int counter = 0;
             while (file >> byte) {
