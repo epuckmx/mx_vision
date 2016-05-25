@@ -15,17 +15,21 @@ int main() {
     mx_vision_init();
     for (int i = 0; i < 3; i++) {
         std::ifstream file(files[i].c_str());
-        int byte = 0;
-        int counter = 0;
-        while (file >> byte) {
-            unsigned char charByte = (unsigned char)byte;
-            image[counter] = charByte;
-            counter++;
-            if (counter == BUFFER_SIZE) {
-                mx_vision_see(image);
-                my_reds += redsDetected;
-                counter = 0;
+        if (file.is_open()) {
+            int byte = 0;
+            int counter = 0;
+            while (file >> byte) {
+                unsigned char charByte = (unsigned char)byte;
+                image[counter] = charByte;
+                counter++;
+                if (counter == BUFFER_SIZE) {
+                    mx_vision_see(image);
+                    my_reds += redsDetected;
+                    counter = 0;
+                }
             }
+        } else {
+            std::cerr << "Error opening file" << std::endl;
         }
         file.close();
     }
