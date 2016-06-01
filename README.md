@@ -48,3 +48,7 @@ Run
 to build and
 
     docker run -it --rm --name mxvision-app mxvision
+
+### Datasets
+
+Datasets are in a dropbox folder
