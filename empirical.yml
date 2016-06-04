@@ -3,11 +3,4 @@ experiments:
     type: standalone
     environment:
       build: .
-    dataset:
-      resources:
-        - url: "https://dl.dropboxusercontent.com/u/9068796/epuckmx/dataset/record1"
-          hash: "aff2957cd4f5be4f5ac539724456b2e465859c097d068b32e08c0927641483df"
-        - url: "https://dl.dropboxusercontent.com/u/9068796/epuckmx/dataset/record2"
-          hash: "83f55ddcc260177b10ad123d56a52bb63e25464e0b7b1e03490dc46b422607f2"
-        - url: "https://dl.dropboxusercontent.com/u/9068796/epuckmx/dataset/record3"
-          hash: "ce5903e2cfd52b4241f03e0665e9fff081d7ca104e438f70ccf34b2c05c58dad"
+    dataset: dataset.json
